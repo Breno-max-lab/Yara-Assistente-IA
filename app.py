@@ -1,88 +1,196 @@
+import base64
+from pathlib import Path
 import streamlit as st
 from src.llm_engine import LLMEngine
 from src.speech_engine import SpeechEngine
 from src.tts_engine import sintetizar_voz
 from src.modules_ui import render_modulo_alfabetizacao, render_modulo_audiovisual
 
-# Configuração da Página
+# --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
-    page_title="Yara - Assistente IA",
+    page_title="Yara • Assistente IA",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Estilização CSS Avançada (Design Escuro, Botões Personalizados e Margens)
+def carregar_logo_base64() -> str:
+    """Carrega o ícone da Yara em base64 para embutir no HTML com nitidez."""
+    caminhos = [
+        Path("assets/yara_icone.png"),
+        Path("src/assets/yara_icone.png"),
+    ]
+    for caminho in caminhos:
+        if caminho.exists():
+            return base64.b64encode(caminho.read_bytes()).decode("utf-8")
+    return ""
+
+LOGO_B64 = carregar_logo_base64()
+
+# --- CSS PROFISSIONAL (ESTILO CLAUDE / GEMINI / CHATGPT) ---
 st.markdown("""
-    <style>
-        /* Ajuste do Tema Geral Escuro Escuro */
-        [data-testid="stSidebar"] {
-            background-color: #0E131F !important;
-            border-right: 1px solid #1D2A44;
-            padding-top: 10px;
-        }
-        .main {
-            background-color: #0A0D14 !important;
-        }
-        
-        /* Fontes e Texto (sem afetar os ícones Material Symbols do Streamlit) */
-        h1, h2, h3, h4, p, label {
-            font-family: 'Inter', sans-serif !important;
-        }
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-        /* Menu de Navegação Personalizado na Esquerda */
-        .sidebar-btn {
-            display: flex;
-            align-items: center;
-            background-color: #172237;
-            color: #E2E8F0 !important;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #233554;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            font-weight: 500;
-            text-decoration: none !important;
-        }
-        .sidebar-btn:hover {
-            background-color: #1E2D4A;
-            border-color: #2E8B57;
-            transform: translateY(-1px);
-        }
-        .sidebar-btn-active {
-            background-color: #2E8B57 !important;
-            border-color: #3CB371;
-            font-weight: 600;
-        }
+    /* Fundo principal e tipografia (preservando ícones do Streamlit) */
+    .stApp {
+        background-color: #0B0F17;
+        color: #E5E7EB;
+    }
+    html, body, p, h1, h2, h3, h4, label, input, textarea, button {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
 
-        /* Centralizar o Layout da Logo e Pergunta Inicial */
-        .central-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding-top: 6%;
-            margin-bottom: 2rem;
-        }
-        
-        /* Chat e Mensagens */
-        .stChatMessage {
-            background-color: #111827 !important;
-            border: 1px solid #1F2937 !important;
-            border-radius: 12px !important;
-            padding: 15px !important;
-            margin-bottom: 12px !important;
-        }
-        
-        /* Ajustar Inputs de Entrada */
-        div[data-baseweb="input"] {
-            background-color: #131A26 !important;
-            border-radius: 25px !important;
-            border: 1px solid #233554 !important;
-        }
-    </style>
+    /* Limpeza do topo padrão do Streamlit */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+    #MainMenu, footer {
+        visibility: hidden;
+    }
+
+    /* Sidebar Minimalista */
+    section[data-testid="stSidebar"] {
+        background-color: #0F1522 !important;
+        border-right: 1px solid #1E293B;
+    }
+    section[data-testid="stSidebar"] .stButton > button {
+        background-color: transparent;
+        color: #CBD5E1;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        text-align: left;
+        justify-content: flex-start;
+        padding: 0.6rem 0.9rem;
+        font-weight: 500;
+        transition: all 0.15s ease;
+    }
+    section[data-testid="stSidebar"] .stButton > button:hover {
+        background-color: #1E293B;
+        color: #FFFFFF;
+        border-color: #334155;
+    }
+
+    /* Botão "Nova Conversa" no topo da Sidebar */
+    div[data-testid="stSidebar"] div.stButton:first-of-type > button {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: #FFFFFF !important;
+        font-weight: 600;
+        border: none;
+        box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+        justify-content: center;
+    }
+    div[data-testid="stSidebar"] div.stButton:first-of-type > button:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+    }
+
+    /* Coluna Central de Leitura (Estilo ChatGPT / Claude) */
+    .block-container {
+        max-width: 860px !important;
+        padding-top: 2rem !important;
+        padding-bottom: 6rem !important;
+        margin: 0 auto !important;
+    }
+
+    /* Hero / Tela Inicial Centralizada */
+    .yara-hero {
+        text-align: center;
+        padding: 2.5rem 1rem 1.5rem 1rem;
+        animation: fadeIn 0.5s ease-out;
+    }
+    .yara-hero img {
+        width: 84px;
+        height: 84px;
+        border-radius: 22px;
+        margin-bottom: 1rem;
+        box-shadow: 0 8px 28px rgba(16, 185, 129, 0.22);
+    }
+    .yara-hero h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #FFFFFF 0%, #6EE7B7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.35rem;
+    }
+    .yara-hero p {
+        color: #94A3B8;
+        font-size: 1.05rem;
+        max-width: 520px;
+        margin: 0 auto;
+    }
+
+    /* Cards de Sugestão (Prompt Chips) */
+    div.prompt-chip button {
+        background-color: #131B2E !important;
+        border: 1px solid #1E293B !important;
+        border-radius: 14px !important;
+        padding: 0.85rem 1rem !important;
+        color: #E2E8F0 !important;
+        font-size: 0.9rem !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        height: 100% !important;
+        transition: all 0.2s ease !important;
+    }
+    div.prompt-chip button:hover {
+        background-color: #1A253E !important;
+        border-color: #10B981 !important;
+        transform: translateY(-2px);
+    }
+
+    /* Mensagens do Chat */
+    div[data-testid="stChatMessage"] {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0.75rem 0 !important;
+        gap: 1rem;
+    }
+    /* Balão sutil apenas para a mensagem do usuário */
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
+        background-color: #162033 !important;
+        border: 1px solid #24324D !important;
+        border-radius: 18px !important;
+        padding: 0.9rem 1.2rem !important;
+        margin-left: 3.5rem;
+    }
+
+    /* Input de Áudio Compacto e Integrado */
+    div[data-testid="stAudioInput"] {
+        background-color: #131B2E;
+        border: 1px solid #24324D;
+        border-radius: 16px;
+        padding: 0.35rem 0.75rem;
+    }
+    div[data-testid="stAudioInput"] label {
+        font-size: 0.82rem !important;
+        color: #94A3B8 !important;
+    }
+
+    /* Caixa de Chat Inferior */
+    div[data-testid="stChatInput"] {
+        background-color: #131B2E !important;
+        border: 1px solid #283754 !important;
+        border-radius: 24px !important;
+    }
+    div[data-testid="stChatInput"]:focus-within {
+        border-color: #10B981 !important;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+    }
+
+    /* Player de Áudio Discreto */
+    audio {
+        height: 36px;
+        border-radius: 10px;
+        margin-top: 6px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 """, unsafe_allow_html=True)
 
 @st.cache_resource
@@ -91,145 +199,148 @@ def inicializar_motores():
 
 llm, stt = inicializar_motores()
 
-# --- ESTADO DO MENU (Sessão para controlar a navegação) ---
+# --- CONTROLE DE ESTADO ---
 if "pagina_atual" not in st.session_state:
-    st.session_state.pagina_atual = "💬 Chat Geral com a Yara"
+    st.session_state.pagina_atual = "chat"
+if "mensagens_geral" not in st.session_state:
+    st.session_state.mensagens_geral = []
 
-# --- BARRA LATERAL (Navegação baseada na imagem) ---
+# --- BARRA LATERAL ---
 with st.sidebar:
-    st.markdown("<h2 style='color: #fff; font-size: 24px; margin-bottom: 5px;'>Yara</h2>", unsafe_allow_html=True)
-    
-    # Botão "Novo" (Reseta o Chat)
-    if st.button("➕ Novo", use_container_width=True):
-        st.session_state.mensagens_geral = [
-            {"role": "assistant", "content": "Olá! Eu sou a Yara. Como posso ajudar você hoje?"}
-        ]
-        st.session_state.pagina_atual = "💬 Chat Geral com a Yara"
+    st.markdown("### 🌿 Yara IA")
+    st.caption("Assistente Educacional • PET UFOPA")
+
+    if st.button("＋ Nova conversa", use_container_width=True):
+        st.session_state.mensagens_geral = []
+        st.session_state.pagina_atual = "chat"
         st.rerun()
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
+    st.caption("MÓDULOS DE APRENDIZAGEM")
 
-    # Botões de Navegação Customizados (Ativos e Inativos)
-    paginas_opcoes = {
-        "🗣️ Alfabetização": "🗣️ 1. Alfabetização (Voz)",
-        "🌱 Educação Ambiental": "🌳 3. Educação Ambiental",
-        "❤️ Saúde e Bem-estar": "🩺 2. Saúde e Bem-Estar",
-        "🛶 Cultura e História": "🛶 4. Cultura e História"
-    }
+    menu_itens = [
+        ("💬", "Conversa Geral", "chat"),
+        ("🗣️", "Alfabetização por Voz", "alfabetizacao"),
+        ("🩺", "Saúde e Bem-Estar", "saude"),
+        ("🌱", "Educação Ambiental", "ambiental"),
+        ("🛶", "Cultura e História", "cultura"),
+    ]
 
-    for label, valor in paginas_opcoes.items():
-        ativo = "sidebar-btn-active" if st.session_state.pagina_atual == valor else ""
-        if st.button(label, key=f"btn_{label}", use_container_width=True, help=f"Ir para {label}"):
-            st.session_state.pagina_atual = valor
+    for icone, titulo, chave in menu_itens:
+        ativo = st.session_state.pagina_atual == chave
+        prefixo = "▸ " if ativo else ""
+        if st.button(f"{prefixo}{icone}  {titulo}", key=f"nav_{chave}", use_container_width=True):
+            st.session_state.pagina_atual = chave
             st.rerun()
 
-    st.markdown("<hr style='border-color: #1D2A44;'>", unsafe_allow_html=True)
-
-    # Filtros de Perfil do Usuário
-    st.markdown("<p style='font-size: 14px; font-weight: 600; color: #94A3B8; margin-bottom: 5px;'>Selecione o Perfil do Usuário: ⚙️</p>", unsafe_allow_html=True)
+    st.divider()
+    st.caption("CONFIGURAÇÕES")
     perfil = st.radio(
-        "Perfil", ["Aluno", "Professor"], 
-        label_visibility="collapsed", index=0
+        "Perfil de uso:",
+        ["Aluno / Comunidade", "Professor / Monitor"],
+        label_visibility="collapsed"
     )
+    ativar_voz_chat = st.toggle("🔊 Ler respostas em voz alta", value=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Toggle de Áudio
-    ativar_voz_chat = st.checkbox("🔊 Responder também em áudio", value=True)
+    st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
+    st.caption(f"⚡ Modelo ativo: `{llm.modelo_ativo}`")
 
-# --- ROTEAMENTO E EXIBIÇÃO DE TELAS ---
+# --- FUNÇÃO AUXILIAR PARA ENVIAR PERGUNTA NO CHAT ---
+def processar_pergunta_chat(pergunta: str):
+    st.session_state.mensagens_geral.append({"role": "user", "content": pergunta})
+    with st.spinner("Yara está formulando a resposta..."):
+        resposta = llm.gerar_resposta(st.session_state.mensagens_geral, modo="geral")
+        audio_resp = sintetizar_voz(resposta) if ativar_voz_chat else None
+    st.session_state.mensagens_geral.append({
+        "role": "assistant",
+        "content": resposta,
+        "audio": audio_resp
+    })
+    st.rerun()
 
-if st.session_state.pagina_atual == "💬 Chat Geral com a Yara":
-    # MODO INICIAL: Interface limpa e centralizada com a imagem de logo
-    if "mensagens_geral" not in st.session_state or len(st.session_state.mensagens_geral) <= 1:
-        st.session_state.mensagens_geral = [
-            {"role": "assistant", "content": "Olá! Eu sou a Yara. Como posso ajudar você hoje?"}
-        ]
-        
-        # Injeção da Yara centralizada
-        st.markdown("<div class='central-container'>", unsafe_allow_html=True)
-        # Busca a logo e adiciona no centro
-        try:
-            st.image("assets/yara_icone.png", width=140)
-        except Exception:
-            # Fallback caso não ache a imagem no local correto
-            st.image("https://raw.githubusercontent.com/Breno-max-lab/Yara-Assistente-IA/main/src/assets/yara_icone.png", width=140)
-            
-        st.markdown("""
-            <h1 style='color:#FFFFFF; font-size: 42px; font-weight: 700; margin-top:10px; margin-bottom:5px;'>Yara</h1>
-            <p style='color:#94A3B8; font-size: 18px; margin-bottom: 25px;'>Como posso te ajudar hoje?</p>
+# --- ROTEAMENTO DAS TELAS ---
+if st.session_state.pagina_atual == "chat":
+    avatar_yara = "assets/yara_icone.png" if Path("assets/yara_icone.png").exists() else "🌿"
+
+    # 1. TELA INICIAL (ESTILO GEMINI / CLAUDE) QUANDO NÃO HÁ MENSAGENS
+    if not st.session_state.mensagens_geral:
+        img_html = (
+            f'<img src="data:image/png;base64,{LOGO_B64}" alt="Yara">'
+            if LOGO_B64 else '<div style="font-size: 3.5rem;">🌿</div>'
+        )
+        st.markdown(f"""
+        <div class="yara-hero">
+            {img_html}
+            <h1>Olá! Eu sou a Yara</h1>
+            <p>Sua assistente virtual da Amazônia. Pergunte por texto ou use o microfone para conversar comigo.</p>
         </div>
         """, unsafe_allow_html=True)
-        
+
+        # Sugestões rápidas clicáveis (Prompt Chips)
+        sugestoes = [
+            ("💧", "Como tratar a água do rio para beber com segurança?"),
+            ("📖", "Quero treinar leitura e aprender novas palavras"),
+            ("🐍", "Me conte a lenda amazônica da Cobra Grande"),
+            ("🌱", "Como evitar queimadas e proteger o solo da roça?"),
+        ]
+        col1, col2 = st.columns(2)
+        for idx, (ico, texto_sug) in enumerate(sugestoes):
+            coluna = col1 if idx % 2 == 0 else col2
+            with coluna:
+                st.markdown('<div class="prompt-chip">', unsafe_allow_html=True)
+                if st.button(f"{ico}  {texto_sug}", key=f"chip_{idx}", use_container_width=True):
+                    processar_pergunta_chat(texto_sug)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+    # 2. HISTÓRICO DA CONVERSA ATIVA
     else:
-        # Modo Conversa Ativa: Exibe histórico
-        st.markdown("<h2 style='color:#FFF; font-weight:700;'>💬 Conversar com a Yara</h2>", unsafe_allow_html=True)
-        st.caption("Tire dúvidas do dia a dia escrevendo ou enviando uma mensagem de voz.")
-        
         for msg in st.session_state.mensagens_geral:
-            with st.chat_message(msg["role"], avatar="🌿" if msg["role"] == "assistant" else "🧑"):
+            avatar = avatar_yara if msg["role"] == "assistant" else "🧑"
+            with st.chat_message(msg["role"], avatar=avatar):
                 st.markdown(msg["content"])
                 if msg.get("audio"):
                     st.audio(msg["audio"], format="audio/mp3")
 
-    # Inputs de texto e voz integrados
-    audio_chat = st.audio_input("🎙️ Falar com a Yara", key="mic_geral")
-    texto_chat = st.chat_input("Escreva ou grave uma mensagem...")
+    # 3. BARRA DE ENTRADA UNIFICADA (ÁUDIO + TEXTO)
+    st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
+    audio_chat = st.audio_input("🎙️ Prefere falar? Grave sua pergunta:", key="mic_geral")
+    texto_chat = st.chat_input("Envie uma mensagem para a Yara...")
 
-    entrada_usuario = None
     if audio_chat is not None:
         audio_bytes = audio_chat.getvalue()
         if st.session_state.get("ultimo_audio_geral") != audio_bytes:
             st.session_state.ultimo_audio_geral = audio_bytes
-            with st.spinner("Ouvindo..."):
-                entrada_usuario = stt.transcrever_audio(audio_bytes)
-    elif texto_chat:
-        entrada_usuario = texto_chat
+            with st.spinner("Ouvindo sua mensagem..."):
+                transcricao = stt.transcrever_audio(audio_bytes)
+            if transcricao:
+                processar_pergunta_chat(transcricao)
 
-    if entrada_usuario:
-        # Remove a saudação inicial vazia se for a primeira mensagem real
-        if (
-            len(st.session_state.mensagens_geral) == 1
-            and st.session_state.mensagens_geral[0]["content"] == "Olá! Eu sou a Yara. Como posso ajudar você hoje?"
-        ):
-            st.session_state.mensagens_geral = []
+    if texto_chat:
+        processar_pergunta_chat(texto_chat)
 
-        st.session_state.mensagens_geral.append({"role": "user", "content": entrada_usuario})
-
-        with st.spinner("Yara está pensando..."):
-            resposta = llm.gerar_resposta(st.session_state.mensagens_geral, modo="geral")
-            audio_resp = sintetizar_voz(resposta) if ativar_voz_chat else None
-
-        st.session_state.mensagens_geral.append({
-            "role": "assistant",
-            "content": resposta,
-            "audio": audio_resp
-        })
-        st.rerun()
-
-elif st.session_state.pagina_atual == "🗣️ 1. Alfabetização (Voz)":
+elif st.session_state.pagina_atual == "alfabetizacao":
     render_modulo_alfabetizacao(llm, stt)
 
-elif st.session_state.pagina_atual == "🩺 2. Saúde e Bem-Estar":
+elif st.session_state.pagina_atual == "saude":
     render_modulo_audiovisual(
         chave_modulo="saude",
-        titulo_pagina="❤️ Saúde e Bem-estar",
-        subtitulo="Animações e dicas sobre cuidados de saúde, higiene e prevenção de doenças.",
+        titulo_pagina="🩺 Saúde e Bem-Estar",
+        subtitulo="Vídeos educativos sobre prevenção de doenças, higiene da água e saúde comunitária.",
         llm=llm
     )
 
-elif st.session_state.pagina_atual == "🌳 3. Educação Ambiental":
+elif st.session_state.pagina_atual == "ambiental":
     render_modulo_audiovisual(
         chave_modulo="ambiental",
         titulo_pagina="🌱 Educação Ambiental",
-        subtitulo="Vídeos, lendas e animações sobre a preservação e valorização da Amazônia.",
+        subtitulo="Preservação da Amazônia, rios voadores e práticas sustentáveis na comunidade.",
         llm=llm
     )
 
-elif st.session_state.pagina_atual == "🛶 4. Cultura e História":
+elif st.session_state.pagina_atual == "cultura":
     render_modulo_audiovisual(
         chave_modulo="cultura",
         titulo_pagina="🛶 Cultura e História",
-        subtitulo="Animações, mitos e contos folclóricos de nossa gente e região.",
+        subtitulo="Lendas amazônicas, folclore regional e memórias das comunidades ribeirinhas.",
         llm=llm
     )
