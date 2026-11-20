@@ -48,26 +48,27 @@ st.markdown("""
     header[data-testid="stHeader"] {
         background: transparent !important;
     }
-    #MainMenu, footer {
-        visibility: hidden;
+    /* Esconde ícones técnicos da barra superior (Share / GitHub / Star) e rodapé */
+    [data-testid="stToolbarActions"], #MainMenu, footer {
+        display: none !important;
+        visibility: hidden !important;
     }
 
     /* =========================================================================
-       BARRA LATERAL ESTILO GEMINI (CANTO SUPERIOR ESQUERDO + ITENS LIMPOS)
+       BARRA LATERAL ESTILO GEMINI (CANTO SUPERIOR ESQUERDO + ITENS ALINHADOS)
        ========================================================================= */
     section[data-testid="stSidebar"] {
         background-color: #131517 !important;
         border-right: 1px solid #1E2023;
         width: 275px !important;
     }
-    /* Remove o espaço gigante acima do topo da sidebar */
     section[data-testid="stSidebar"] > div:first-child {
-        padding-top: 0.85rem !important;
+        padding-top: 0.75rem !important;
     }
     div[data-testid="stSidebarHeader"] {
-        height: 1.5rem !important;
+        height: 1.4rem !important;
         padding: 0 0.75rem !important;
-        margin-bottom: 0.2rem !important;
+        margin-bottom: 0.15rem !important;
     }
 
     /* Cabeçalho da marca Yara no canto superior esquerdo */
@@ -75,7 +76,7 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.2rem 0.65rem 1.1rem 0.65rem;
+        padding: 0.2rem 0.65rem 1rem 0.65rem;
     }
     .gemini-brand-left {
         display: flex;
@@ -102,9 +103,9 @@ st.markdown("""
         font-weight: 500;
     }
 
-    /* Botões de navegação da sidebar em formato de lista minimalista */
+    /* Botões de navegação da sidebar compactos e alinhados à esquerda */
     section[data-testid="stSidebar"] .stButton {
-        margin-bottom: -0.35rem !important;
+        margin-bottom: -0.65rem !important;
     }
     section[data-testid="stSidebar"] .stButton > button {
         background-color: transparent !important;
@@ -113,30 +114,35 @@ st.markdown("""
         border-radius: 999px !important;
         text-align: left !important;
         justify-content: flex-start !important;
-        padding: 0.52rem 0.95rem !important;
+        padding: 0.5rem 0.9rem !important;
         font-size: 0.9rem !important;
         font-weight: 400 !important;
         box-shadow: none !important;
         transition: background-color 0.15s ease, color 0.15s ease !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button > div {
+        width: 100%;
+        text-align: left !important;
+        justify-content: flex-start !important;
     }
     section[data-testid="stSidebar"] .stButton > button:hover {
         background-color: #1E2023 !important;
         color: #FFFFFF !important;
     }
 
-    /* Item Ativo (Pílula escura arredondada idêntica à imagem do Gemini) */
+    /* Item Ativo (Pílula escura arredondada) */
     section[data-testid="stSidebar"] div.nav-active .stButton > button {
         background-color: #25282C !important;
         color: #FFFFFF !important;
         font-weight: 500 !important;
     }
 
-    /* Rótulo discreto de seção (igual "Notebooks" na imagem) */
+    /* Rótulo discreto de seção */
     .sidebar-section-label {
         font-size: 0.78rem;
         font-weight: 600;
         color: #8E9297;
-        padding: 1.1rem 0.95rem 0.35rem 0.95rem;
+        padding: 1.25rem 0.9rem 0.35rem 0.9rem;
     }
 
     /* Cartão discreto do perfil no rodapé da sidebar */
@@ -147,7 +153,7 @@ st.markdown("""
         padding: 0.55rem 0.75rem;
         border-radius: 12px;
         background-color: #191B1E;
-        margin-top: 0.4rem;
+        margin-top: 0.45rem;
     }
     .profile-avatar {
         width: 30px;
@@ -176,22 +182,22 @@ st.markdown("""
        ÁREA PRINCIPAL DE CONTEÚDO
        ========================================================================= */
     .block-container {
-        max-width: 840px !important;
-        padding-top: 2rem !important;
+        max-width: 820px !important;
+        padding-top: 1.8rem !important;
         padding-bottom: 6.5rem !important;
         margin: 0 auto !important;
     }
 
     .yara-hero {
         text-align: center;
-        padding: 2.2rem 1rem 1.3rem 1rem;
+        padding: 2rem 1rem 1.1rem 1rem;
         animation: fadeIn 0.4s ease-out;
     }
     .yara-hero img {
-        width: 76px;
-        height: 76px;
+        width: 74px;
+        height: 74px;
         border-radius: 20px;
-        margin-bottom: 1rem;
+        margin-bottom: 0.9rem;
         box-shadow: 0 8px 28px rgba(16, 185, 129, 0.2);
     }
     .yara-hero h1 {
@@ -209,12 +215,12 @@ st.markdown("""
         margin: 0 auto;
     }
 
-    /* Prompt Chips */
+    /* Prompt Chips (Pílulas limpas sem corte de texto) */
     div.prompt-chip button {
         background-color: #16181B !important;
         border: 1px solid #23262A !important;
-        border-radius: 14px !important;
-        padding: 0.85rem 1rem !important;
+        border-radius: 999px !important;
+        padding: 0.75rem 1.15rem !important;
         color: #E3E5E8 !important;
         font-size: 0.9rem !important;
         text-align: left !important;
@@ -281,6 +287,75 @@ def inicializar_motores():
 
 
 llm, stt = inicializar_motores()
+
+
+# --- BOTÃO DE BOAS-VINDAS POR VOZ NA TELA INICIAL (ACESSIBILIDADE) ---
+def render_botao_boas_vindas_voz():
+    texto_apresentacao = (
+        "Olá! Eu sou a Yara, sua assistente virtual da Amazônia. "
+        "Aqui no menu ao lado você pode conversar comigo, treinar leitura na escolinha de voz, "
+        "assistir vídeos sobre saúde, meio ambiente e cultura, ou escrever e falar sua dúvida na barra abaixo."
+    )
+    html_voz = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+        }}
+        .welcome-voice-btn {{
+            background: #16181B;
+            color: #6EE7B7;
+            border: 1px solid #23262A;
+            border-radius: 999px;
+            padding: 7px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+        }}
+        .welcome-voice-btn:hover {{
+            background: #1E2125;
+            border-color: #10B981;
+        }}
+    </style>
+    </head>
+    <body>
+        <button class="welcome-voice-btn" id="btn_welcome" onclick="falarBoasVindas()">
+            🔊 Ouvir apresentação da Yara
+        </button>
+        <script>
+            function falarBoasVindas() {{
+                if (!('speechSynthesis' in window)) return;
+                const btn = document.getElementById('btn_welcome');
+                if (window.speechSynthesis.speaking) {{
+                    window.speechSynthesis.cancel();
+                    btn.innerText = '🔊 Ouvir apresentação da Yara';
+                    return;
+                }}
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance({repr(texto_apresentacao)});
+                u.lang = 'pt-BR';
+                u.rate = 0.98;
+                u.onstart = () => {{ btn.innerText = '⏹️ Parar áudio'; }};
+                u.onend = () => {{ btn.innerText = '🔊 Ouvir apresentação da Yara'; }};
+                u.onerror = () => {{ btn.innerText = '🔊 Ouvir apresentação da Yara'; }};
+                window.speechSynthesis.speak(u);
+            }}
+        </script>
+    </body>
+    </html>
+    """
+    components.html(html_voz, height=42)
 
 
 # --- BARRA DE ÍCONES COMPACTA ABAIXO DA RESPOSTA ---
@@ -438,7 +513,7 @@ if "mensagens_geral" not in st.session_state:
     st.session_state.mensagens_geral = []
 
 # ==============================================================================
-# BARRA LATERAL ESTILO GEMINI (MARCA NO TOPO ESQUERDO + LISTA LIMPA)
+# BARRA LATERAL ESTILO GEMINI (MARCA NO TOPO ESQUERDO + LISTA ALINHADA)
 # ==============================================================================
 with st.sidebar:
     logo_topo = (
@@ -455,7 +530,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # Ação principal no topo da lista (igual "Nova conversa" na imagem)
+    # Ação principal no topo da lista
     if st.button("📝   Nova conversa", key="btn_nova_conversa", use_container_width=True):
         st.session_state.mensagens_geral = []
         st.session_state.pagina_atual = "chat"
@@ -480,7 +555,7 @@ with st.sidebar:
         if ativo:
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # Seção dedicada para ferramentas do Professor (estilo seção "Notebooks" do Gemini)
+    # Seção dedicada para ferramentas do Professor
     st.markdown('<div class="sidebar-section-label">Modo de Uso</div>', unsafe_allow_html=True)
     perfil = st.radio(
         "Perfil de uso:",
@@ -501,7 +576,7 @@ with st.sidebar:
     st.markdown("<div style='height: 18px'></div>", unsafe_allow_html=True)
     tocar_automatico = st.toggle("🔊 Voz neural automática", value=False)
 
-    # Rodapé estilo cartão de perfil do Gemini
+    # Rodapé estilo cartão de perfil
     nome_perfil = "Professor / Monitor" if perfil == "Professor / Monitor" else "Comunidade"
     badge_plano = "Estúdio Ativo" if perfil == "Professor / Monitor" else "Acesso Livre"
     inicial_avatar = "P" if perfil == "Professor / Monitor" else "Y"
@@ -559,19 +634,22 @@ if st.session_state.pagina_atual == "chat":
         </div>
         """, unsafe_allow_html=True)
 
+        render_botao_boas_vindas_voz()
+        st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
+
         sugestoes = [
-            ("💧", "Como tratar a água do rio para beber com segurança?"),
-            ("📖", "Quero treinar leitura e aprender novas palavras"),
-            ("🐍", "Me conte a lenda amazônica da Cobra Grande"),
-            ("🌱", "Como evitar queimadas e proteger o solo da roça?"),
+            ("💧", "Tratar água do rio", "Como tratar a água do rio para beber com segurança?"),
+            ("📖", "Treinar leitura e palavras", "Quero treinar leitura e aprender novas palavras"),
+            ("🐍", "Lenda da Cobra Grande", "Me conte a lenda amazônica da Cobra Grande"),
+            ("🌱", "Evitar queimadas na roça", "Como evitar queimadas e proteger o solo da roça?"),
         ]
         col1, col2 = st.columns(2)
-        for idx, (ico, texto_sug) in enumerate(sugestoes):
+        for idx, (ico, rotulo_curto, pergunta_completa) in enumerate(sugestoes):
             coluna = col1 if idx % 2 == 0 else col2
             with coluna:
                 st.markdown('<div class="prompt-chip">', unsafe_allow_html=True)
-                if st.button(f"{ico}  {texto_sug}", key=f"chip_{idx}", use_container_width=True):
-                    processar_pergunta_chat(texto_sug)
+                if st.button(f"{ico}  {rotulo_curto}", key=f"chip_{idx}", use_container_width=True):
+                    processar_pergunta_chat(pergunta_completa)
                 st.markdown('</div>', unsafe_allow_html=True)
 
     else:
