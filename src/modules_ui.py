@@ -1,6 +1,7 @@
 import base64
 import json
 import re
+import unicodedata
 from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
@@ -15,71 +16,95 @@ from src.video_curadoria import (
 
 DATA_PATH = Path(__file__).parent.parent / "data" / "conteudos_modulos.json"
 
-# Trilha pedagógica progressiva (Alfabetização)
+# Trilha lúdica para não-leitores (Figura grande + Letra/Sílaba + Palavra-âncora para o Whisper)
 TRILHA_ALFABETIZACAO = [
     {
+        "emoji": "🦜",
         "foco": "A",
-        "dica_whisper": "Letra A, Ah, Arara, Açaí, Água, Abelha, Amor.",
+        "palavra_alvo": "ARARA",
+        "aceitas": ["arara", "acai", "açaí", "agua", "água", "abelha", "amor", "avião", "aviao", "letra a"],
+        "dica_whisper": "Arara, Açaí, Água, Abelha, Letra A.",
         "fala_inicial": (
             "Oi, que alegria ter você na minha escolinha! Eu sou a professora Yara. "
-            "Olha essa letra grandona brilhando na tela: é a letra A, de Arara e Açaí! "
+            "Olha o passarinho colorido e a letra A na tela: é o A de Arara! "
             "Aperta o microfone aqui embaixo e fala bem bonito: Arara!"
         ),
     },
     {
+        "emoji": "⭐",
         "foco": "E",
-        "dica_whisper": "Letra E, É, Ê, Escola, Elefante, Estrela, Escada.",
+        "palavra_alvo": "ESTRELA",
+        "aceitas": ["estrela", "escola", "elefante", "escada", "espelho", "letra e"],
+        "dica_whisper": "Estrela, Escola, Elefante, Escada, Letra E.",
         "fala_inicial": (
-            "Agora chegamos na letra E, de Estrela e Escola! "
+            "Agora olha essa figura brilhando junto com a letra E: é o E de Estrela! "
             "Aperta o microfone e fala comigo bem forte: Estrela!"
         ),
     },
     {
+        "emoji": "🏝️",
         "foco": "I",
-        "dica_whisper": "Letra I, Ih, Índio, Igarapé, Ilha, Igreja.",
+        "palavra_alvo": "ILHA",
+        "aceitas": ["ilha", "igarape", "igarapé", "indio", "índio", "igreja", "letra i"],
+        "dica_whisper": "Ilha, Igarapé, Índio, Igreja, Letra I.",
         "fala_inicial": (
-            "Olha só a letra I! Ela é fininha igual um lápis, e é a letra de Ilha e Igarapé! "
+            "Olha só a letra I fininha igual um lápis, junto com a Ilha no meio do rio! "
             "Fala no microfone comigo: Ilha!"
         ),
     },
     {
+        "emoji": "🐆",
         "foco": "O",
-        "dica_whisper": "Letra O, Ó, Ô, Onça, Ovo, Onda, Olho.",
+        "palavra_alvo": "ONÇA",
+        "aceitas": ["onca", "onça", "ovo", "onda", "olho", "orelha", "letra o"],
+        "dica_whisper": "Onça, Ovo, Onda, Olho, Letra O.",
         "fala_inicial": (
-            "Essa letra redondinha igual uma bola é a letra O, de Onça e Onda do rio! "
+            "Essa letra redondinha igual uma bola é a letra O, de Onça pintada! "
             "Aperta o microfone e fala comigo: Onça!"
         ),
     },
     {
+        "emoji": "🍇",
         "foco": "U",
-        "dica_whisper": "Letra U, Uh, Urubu, Uva, Urso, Unha.",
+        "palavra_alvo": "UVA",
+        "aceitas": ["uva", "urubu", "urso", "unha", "letra u"],
+        "dica_whisper": "Uva, Urubu, Urso, Unha, Letra U.",
         "fala_inicial": (
             "Chegamos na última vogal, a letra U, de Uva e Urubu! "
             "Faz biquinho e fala no microfone: Uva!"
         ),
     },
     {
-        "foco": "AI",
-        "dica_whisper": "Ai, Aí, juntar letras, vogais.",
-        "fala_inicial": (
-            "Você já conhece todas as vogais! Agora vamos juntar duas letrinhas: o A com o I faz AI! "
-            "Igual quando a gente dá uma topadinha no pé e fala: Ai! Tenta falar no microfone: Ai!"
-        ),
-    },
-    {
+        "emoji": "🍌",
         "foco": "BA",
-        "dica_whisper": "Ba, Bá, Banana, Barco, Baleia, Batata.",
+        "palavra_alvo": "BANANA",
+        "aceitas": ["banana", "barco", "baleia", "batata", "bacia", "ba"],
+        "dica_whisper": "Banana, Barco, Baleia, Batata, Ba.",
         "fala_inicial": (
-            "Agora vamos conhecer a família da letra B! Quando o B dá a mão para o A, faz BA, de Banana e Barco! "
+            "Você já conhece todas as vogais! Agora quando o B dá a mão para o A, faz BA, de Banana! "
             "Aperta o microfone e fala comigo: Banana!"
         ),
     },
     {
+        "emoji": "🐬",
         "foco": "BO",
-        "dica_whisper": "Bo, Bó, Bô, Boto, Bola, Bolo, Boca.",
+        "palavra_alvo": "BOTO",
+        "aceitas": ["boto", "bola", "bolo", "boca", "botina", "bo"],
+        "dica_whisper": "Boto, Bola, Bolo, Boca, Bo.",
         "fala_inicial": (
-            "E quando o B dá a mão para o O, faz BO, de Boto cor-de-rosa e Bola! "
+            "E quando o B dá a mão para o O, faz BO, de Boto cor-de-rosa! "
             "Fala no microfone para a professora ouvir: Boto!"
+        ),
+    },
+    {
+        "emoji": "🛶",
+        "foco": "CA",
+        "palavra_alvo": "CANOA",
+        "aceitas": ["canoa", "casa", "cachorro", "cavalo", "camisa", "ca"],
+        "dica_whisper": "Canoa, Casa, Cachorro, Cavalo, Ca.",
+        "fala_inicial": (
+            "Para fechar com chave de ouro, o C com o A faz CA, de Canoa! "
+            "Aperta o microfone e fala bem alegre: Canoa!"
         ),
     },
 ]
@@ -99,7 +124,6 @@ def salvar_conteudos(dados: dict):
 
 
 def _extrair_thumbnail_youtube(url: str) -> str:
-    """Extrai a imagem de capa (thumbnail) automática se o link for do YouTube."""
     padrao = r"(?:v=|\/)([0-9A-Za-z_-]{11}).*"
     match = re.search(padrao, url or "")
     if match:
@@ -109,8 +133,13 @@ def _extrair_thumbnail_youtube(url: str) -> str:
 
 
 # ==============================================================================
-# MÓDULO 1: ALFABETIZAÇÃO POR VOZ
+# MÓDULO 1: ALFABETIZAÇÃO POR VOZ (PROFESSORA INFANTIL + ORBE VERDE-ESMERALDA)
 # ==============================================================================
+def _normalizar_texto(txt: str) -> str:
+    nfkd = unicodedata.normalize("NFKD", txt.lower())
+    return "".join(c for c in nfkd if not unicodedata.combining(c))
+
+
 def _avaliar_resposta_professora(texto_bruto: str) -> tuple[bool, str]:
     linhas = [l.strip() for l in texto_bruto.strip().splitlines() if l.strip()]
     acertou = False
@@ -126,6 +155,7 @@ def _avaliar_resposta_professora(texto_bruto: str) -> tuple[bool, str]:
 
 def _render_palco_professora_yara(
     fala_yara: str,
+    emoji_visual: str,
     foco_visual: str,
     estrelas: int,
     total_etapas: int,
@@ -160,7 +190,7 @@ def _render_palco_professora_yara(
             background: #05070B;
             border: 1px solid #141E2B;
             border-radius: 28px;
-            padding: 24px 20px 26px 20px;
+            padding: 22px 20px 24px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -171,7 +201,7 @@ def _render_palco_professora_yara(
         .stars-bar {{
             display: flex;
             gap: 8px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             background: #0D131F;
             padding: 6px 16px;
             border-radius: 999px;
@@ -185,20 +215,20 @@ def _render_palco_professora_yara(
         .star.earned {{
             color: #FBBF24;
             text-shadow: 0 0 12px rgba(251, 191, 36, 0.75);
-            transform: scale(1.1);
+            transform: scale(1.12);
         }}
         .orb-container {{
-            width: 145px;
-            height: 145px;
+            width: 130px;
+            height: 130px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             cursor: pointer;
         }}
         .emerald-orb {{
-            width: 132px;
-            height: 132px;
+            width: 118px;
+            height: 118px;
             border-radius: 50%;
             background:
                 radial-gradient(circle at 32% 28%, rgba(236, 253, 245, 0.95) 0%, rgba(110, 231, 183, 0.85) 28%, rgba(16, 185, 129, 0.92) 60%, rgba(4, 120, 87, 1) 100%);
@@ -222,20 +252,37 @@ def _render_palco_professora_yara(
             50% {{ transform: scale(1.09); border-radius: 47% 53% 50% 50%; }}
             100% {{ transform: scale(1.14); border-radius: 50%; }}
         }}
+
+        /* Associação Visual: Figura Grande + Letra Gigante */
+        .visual-cue {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+            background: #0D131F;
+            border: 1px solid #1E293B;
+            border-radius: 22px;
+            padding: 12px 28px;
+            margin-bottom: 12px;
+        }}
+        .cue-emoji {{
+            font-size: 58px;
+            line-height: 1;
+        }}
         .giant-letter {{
-            font-size: 72px;
+            font-size: 68px;
             font-weight: 800;
             color: #FFFFFF;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.06em;
             line-height: 1;
-            margin-bottom: 10px;
             text-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
         }}
+
         .voice-status {{
             font-size: 14px;
             font-weight: 500;
             color: #94A3B8;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }}
         .voice-status.active {{
             color: #6EE7B7;
@@ -268,7 +315,10 @@ def _render_palco_professora_yara(
             <div class="orb-container" onclick="tocarVoz_{render_id}()">
                 <div class="emerald-orb" id="orb_{render_id}"></div>
             </div>
-            <div class="giant-letter">{foco_visual}</div>
+            <div class="visual-cue">
+                <span class="cue-emoji">{emoji_visual}</span>
+                <span class="giant-letter">{foco_visual}</span>
+            </div>
             <div class="voice-status" id="status_{render_id}">Aperte o microfone abaixo para falar</div>
             <button class="listen-again-btn" onclick="tocarVoz_{render_id}()">
                 🔊 Ouvir a Professora Yara
@@ -319,12 +369,12 @@ def _render_palco_professora_yara(
                 aud.onended = animarFim;
                 aud.onpause = animarFim;
             }}
-            setTimeout(() => {{ tocarVoz_{render_id}(); }}, 120);
+            setTimeout(() => {{ tocarVoz_{render_id}(); }}, 100);
         </script>
     </body>
     </html>
     """
-    components.html(html_code, height=430)
+    components.html(html_code, height=445)
 
 
 def _preparar_etapa(indice_etapa: int, fala_customizada: str | None = None):
@@ -335,6 +385,7 @@ def _preparar_etapa(indice_etapa: int, fala_customizada: str | None = None):
 
     st.session_state.alfab_estado = {
         "etapa_idx": indice_etapa,
+        "emoji": etapa["emoji"],
         "foco": etapa["foco"],
         "fala": fala,
         "audio_b64": audio_b64,
@@ -347,6 +398,25 @@ def _preparar_etapa(indice_etapa: int, fala_customizada: str | None = None):
 def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
     total_etapas = len(TRILHA_ALFABETIZACAO)
 
+    # Tela inicial com gesto explícito para destravar o áudio no navegador
+    if not st.session_state.get("alfab_iniciada", False):
+        st.markdown("""
+        <div style="background:#05070B; border:1px solid #141E2B; border-radius:28px; padding:48px 24px; text-align:center;">
+            <div style="font-size:64px; margin-bottom:12px;">🌿🦜</div>
+            <h2 style="color:#FFFFFF; margin-bottom:8px;">Escolinha de Voz da Professora Yara</h2>
+            <p style="color:#94A3B8; max-width:440px; margin:0 auto 24px auto;">
+                Vamos aprender os sons das letras e palavras brincando! Toque no botão abaixo para começar.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+        if st.button("▶ Começar Aula com a Professora Yara", type="primary", use_container_width=True):
+            st.session_state.alfab_iniciada = True
+            st.session_state.alfab_estrelas = 0
+            _preparar_etapa(0)
+            st.rerun()
+        return
+
     if "alfab_estado" not in st.session_state:
         st.session_state.alfab_estrelas = 0
         _preparar_etapa(0)
@@ -356,6 +426,7 @@ def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
 
     _render_palco_professora_yara(
         fala_yara=estado["fala"],
+        emoji_visual=estado["emoji"],
         foco_visual=estado["foco"],
         estrelas=st.session_state.get("alfab_estrelas", 0),
         total_etapas=total_etapas,
@@ -371,7 +442,7 @@ def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
             label_visibility="collapsed",
         )
     with col_next:
-        if st.button("⏭️", help="Ir para a próxima letra", use_container_width=True):
+        if st.button("⏭️", help="Ir para a próxima figura", use_container_width=True):
             proxima = (estado["etapa_idx"] + 1) % total_etapas
             _preparar_etapa(proxima)
             st.rerun()
@@ -396,21 +467,33 @@ def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
                 )
 
             if not texto_aluno or texto_aluno.startswith("[Erro"):
-                texto_aluno = "(Não consegui ouvir bem, fale mais pertinho do microfone)"
+                texto_aluno = ""
 
-            prompt_avaliacao = [
-                {
-                    "role": "user",
-                    "content": (
-                        f"Lição atual: Letra/Sílaba '{etapa_atual['foco']}'. "
-                        f"O que a professora pediu: '{estado['fala']}'. "
-                        f"O que o aluno falou no microfone: '{texto_aluno}'."
-                    ),
-                }
-            ]
-            with st.spinner("..."):
-                resposta_bruta = llm.gerar_resposta(prompt_avaliacao, modo="alfabetizacao")
-                acertou, fala_professora = _avaliar_resposta_professora(resposta_bruta)
+            fala_norm = _normalizar_texto(texto_aluno)
+            aceitas_norm = [_normalizar_texto(p) for p in etapa_atual["aceitas"]]
+            acertou_direto = any(palavra in fala_norm for palavra in aceitas_norm if palavra)
+
+            if acertou_direto:
+                elogios = [
+                    f"Ebaaa! Muito bem, você falou {etapa_atual['palavra_alvo']} direitinho e ganhou uma estrelinha!",
+                    f"Isso mesmo! Parabéns, você brilhou falando {etapa_atual['palavra_alvo']}!",
+                    f"Que lindo! Palmas para você, acertou {etapa_atual['palavra_alvo']} de primeira!",
+                ]
+                fala_professora = elogios[estado["etapa_idx"] % len(elogios)]
+                acertou = True
+            else:
+                prompt_avaliacao = [
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Lição atual: Letra/Sílaba '{etapa_atual['foco']}' (Palavra-alvo: '{etapa_atual['palavra_alvo']}'). "
+                            f"O que o aluno falou no microfone: '{texto_aluno or 'silêncio'}'."
+                        ),
+                    }
+                ]
+                with st.spinner("..."):
+                    resposta_bruta = llm.gerar_resposta(prompt_avaliacao, modo="alfabetizacao")
+                    acertou, fala_professora = _avaliar_resposta_professora(resposta_bruta)
 
             if acertou:
                 st.session_state.alfab_estrelas = min(
@@ -423,7 +506,7 @@ def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
             else:
                 _preparar_etapa(estado["etapa_idx"], fala_customizada=fala_professora)
 
-            st.session_state.alfab_estado["ultima_fala_aluno"] = texto_aluno
+            st.session_state.alfab_estado["ultima_fala_aluno"] = texto_aluno or "(Áudio muito baixinho)"
             st.rerun()
 
 
@@ -498,7 +581,6 @@ def render_modulo_audiovisual(
     todos_dados = carregar_conteudos()
     conteudos = todos_dados.get(chave_modulo, [])
 
-    # --- BARRA DE CURADORIA AUTOMÁTICA COM IA ---
     with st.expander("✨ Buscar e atualizar animações automaticamente por tema"):
         col_auto1, col_auto2 = st.columns([2, 1])
         with col_auto1:
@@ -541,7 +623,6 @@ def render_modulo_audiovisual(
         st.info("Nenhum vídeo cadastrado neste módulo ainda. Use o botão acima para preencher automaticamente!")
         return
 
-    # --- FILTRO POR CATEGORIA ---
     categorias = ["Todos"] + sorted(list({item["categoria"] for item in conteudos}))
     col_filtro, col_info_qtd = st.columns([2, 3])
     with col_filtro:
@@ -569,9 +650,6 @@ def render_modulo_audiovisual(
 
     video_atual = next(v for v in lista_filtrada if v["id"] == st.session_state[chave_selecao])
 
-    # ==========================================================================
-    # 1. PALCO PRINCIPAL ("ASSISTINDO AGORA" + TUTOR IA INTERATIVO)
-    # ==========================================================================
     with st.container(border=True):
         col_player, col_detalhes = st.columns([1.45, 1])
 
@@ -602,7 +680,6 @@ def render_modulo_audiovisual(
 
         st.divider()
 
-        # --- PERGUNTAS RÁPIDAS + PERGUNTA POR VOZ OU TEXTO SOBRE ESTE VÍDEO ---
         st.markdown("#### 🌿 Converse com a Yara sobre este vídeo")
 
         chave_chat_vid = f"chat_vid_{video_atual['id']}"
@@ -675,9 +752,6 @@ def render_modulo_audiovisual(
             if interacao.get("audio"):
                 st.audio(interacao["audio"], format="audio/mp3", autoplay=True)
 
-    # ==========================================================================
-    # 2. GRADE DE EPISÓDIOS / ANIMAÇÕES (ESTILO CATÁLOGO DE STREAMING)
-    # ==========================================================================
     st.markdown("### 🎬 Mais vídeos e animações deste módulo")
     cols_grade = st.columns(3)
     for idx, item in enumerate(lista_filtrada):
@@ -703,9 +777,6 @@ def render_modulo_audiovisual(
                 st.session_state[chave_selecao] = item["id"]
                 st.rerun()
 
-    # ==========================================================================
-    # 3. PAINEL RÁPIDO PARA ADICIONAR NOVO VÍDEO MANUALMENTE
-    # ==========================================================================
     with st.expander("➕ Adicionar link de vídeo manualmente (Professor / PET)"):
         with st.form(key=f"form_add_vid_{chave_modulo}", clear_on_submit=True):
             novo_titulo = st.text_input("Título do vídeo ou animação")
