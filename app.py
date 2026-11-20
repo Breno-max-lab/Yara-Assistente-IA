@@ -48,8 +48,15 @@ st.markdown("""
     header[data-testid="stHeader"] {
         background: transparent !important;
     }
-    /* Esconde ícones técnicos da barra superior (Share / GitHub / Star) e rodapé */
-    [data-testid="stToolbarActions"], #MainMenu, footer {
+    /* Esconde ícones técnicos da barra superior, rodapé e selo do Streamlit Cloud */
+    [data-testid="stToolbarActions"],
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    .viewerBadge_container__1QSob,
+    .viewerBadge_link__1S137,
+    div[class*="viewerBadge"],
+    #MainMenu,
+    footer {
         display: none !important;
         visibility: hidden !important;
     }
