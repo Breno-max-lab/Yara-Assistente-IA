@@ -2,59 +2,89 @@
   "saude": [
     {
       "id": "saude_1",
-      "titulo": "Cuidados com a Água e Prevenção de Doenças",
-      "categoria": "Higiene e Prevenção",
+      "titulo": "Tratamento Caseiro da Água com Hipoclorito de Sódio",
+      "categoria": "Água e Higiene",
       "duracao": "3 min",
-      "descricao": "Como tratar a água do rio ou poço usando hipoclorito de sódio ou fervura para evitar diarreias, verminoses e hepatite A na comunidade.",
+      "descricao": "Aprenda o passo a passo para purificar a água do rio, poço ou chuva usando gotas de hipoclorito de sódio ou fervura, prevenindo diarreias, verminoses e hepatite A na família.",
       "video_url": "https://www.youtube.com/watch?v=9bZkp7q19f0",
-      "topicos_chave": ["Tratamento da água", "Hipoclorito de sódio", "Higiene das mãos"]
+      "topicos_chave": ["2 gotas por litro", "Aguardar 30 minutos", "Recipiente limpo e tampado"],
+      "perguntas_rapidas": [
+        "Quantas gotas de hipoclorito devo colocar em 1 litro de água?",
+        "Quanto tempo preciso esperar antes de beber a água tratada?",
+        "Posso usar água sanitária comum se não tiver hipoclorito?"
+      ]
     },
     {
       "id": "saude_2",
-      "titulo": "Prevenção contra Dengue, Malária e Arboviroses",
-      "categoria": "Saúde na Amazônia",
+      "titulo": "Combate à Dengue, Malária e Mosquitos na Comunidade",
+      "categoria": "Prevenção de Doenças",
       "duracao": "4 min",
-      "descricao": "Identificação dos sintomas iniciais, uso correto de mosquiteiros e eliminação de focos de água parada ao redor das casas e embarcações.",
-      "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "topicos_chave": ["Sintomas da malária e dengue", "Uso de mosquiteiro", "Quando procurar o posto de saúde"]
+      "descricao": "Como eliminar criadouros do mosquito em baldes, calhas, cascas de coco e embarcações, além do uso correto de mosquiteiros e identificação dos primeiros sintomas de febre.",
+      "video_url": "https://www.youtube.com/watch?v=LXb3EKWsInQ",
+      "topicos_chave": ["Água parada", "Uso de mosquiteiro", "Procurar o agente de saúde"],
+      "perguntas_rapidas": [
+        "Quais são os primeiros sintomas de dengue e malária?",
+        "Onde os mosquitos costumam colocar ovos perto do rio?",
+        "O que devo fazer se alguém da casa tiver febre alta?"
+      ]
     },
     {
       "id": "saude_3",
-      "titulo": "Primeiros Socorros: Picadas de Animais Peçonhentos",
-      "categoria": "Urgência",
+      "titulo": "Primeiros Socorros: Acidentes com Animais Peçonhentos",
+      "categoria": "Primeiros Socorros",
       "duracao": "5 min",
-      "descricao": "O que fazer e o que NUNCA fazer em casos de picadas de cobra, aranha ou escorpião antes de chegar ao atendimento médico.",
-      "video_url": "https://www.youtube.com/watch?v=LXb3EKWsInQ",
-      "topicos_chave": ["Lavar com água e sabão", "Não fazer torniquete", "Buscar soro antiofídico"]
+      "descricao": "Cuidados essenciais em caso de picada de cobra, aranha ou escorpião na mata ou na roça: o que fazer imediatamente e o que nunca aplicar no ferimento.",
+      "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "topicos_chave": ["Lavar com água e sabão", "Manter a pessoa calma", "Não fazer torniquete"],
+      "perguntas_rapidas": [
+        "Por que não se deve amarrar ou cortar o local da picada?",
+        "O que fazer enquanto levamos a pessoa ao posto de saúde?",
+        "Como evitar acidentes com cobras e escorpiões no quintal?"
+      ]
     }
   ],
   "ambiental": [
     {
       "id": "amb_1",
-      "titulo": "A Importância dos Rios Voadores e da Floresta em Pé",
-      "categoria": "Clima e Biodiversidade",
+      "titulo": "Rios Voadores: Como a Floresta Amazônica Produz Chuva",
+      "categoria": "Clima e Floresta",
       "duracao": "4 min",
-      "descricao": "Entenda como a floresta amazônica produz chuva para todo o Brasil e por que o equilíbrio dos igarapés garante o peixe e a colheita.",
+      "descricao": "Descubra como as árvores da Amazônia bombeiam umidade para o ar formando rios invisíveis no céu que garantem as chuvas, os igarapés cheios e o clima equilibrado.",
       "video_url": "https://www.youtube.com/watch?v=LXb3EKWsInQ",
-      "topicos_chave": ["Ciclo da água", "Preservação dos igarapés", "Clima regional"]
+      "topicos_chave": ["Evapotranspiração", "Ciclo das chuvas", "Floresta em pé"],
+      "perguntas_rapidas": [
+        "O que são os rios voadores da Amazônia?",
+        "Como o desmatamento afeta a chuva e o nível dos rios?",
+        "Qual o papel da comunidade na proteção das nascentes?"
+      ]
     },
     {
       "id": "amb_2",
-      "titulo": "Queimadas e Fumaça: Impactos na Saúde e no Solo",
-      "categoria": "Problemas Ambientais",
-      "duracao": "3 min",
-      "descricao": "Os riscos do uso descontrolado do fogo no preparo da roça, alternativas de manejo sustentável e os danos respiratórios causados pela fumaça.",
+      "titulo": "Alternativas ao Fogo na Roça e Prevenção de Queimadas",
+      "categoria": "Uso Sustentável da Terra",
+      "duracao": "4 min",
+      "descricao": "Os prejuízos das queimadas para a fertilidade do solo, para a fauna e para a respiração das crianças e idosos, e técnicas simples de manejo sem fogo.",
       "video_url": "https://www.youtube.com/watch?v=9bZkp7q19f0",
-      "topicos_chave": ["Manejo sem fogo", "Saúde respiratória", "Empobrecimento do solo"]
+      "topicos_chave": ["Adubação orgânica", "Saúde respiratória", "Proteção do solo"],
+      "perguntas_rapidas": [
+        "Por que o fogo enfraquece a terra depois de algumas colheitas?",
+        "Como preparar a área de plantio sem precisar queimar?",
+        "Como proteger crianças e idosos em dias de muita fumaça?"
+      ]
     },
     {
       "id": "amb_3",
-      "titulo": "Descarte Correto de Lixo e Plásticos nos Rios",
-      "categoria": "Saneamento Comunitário",
+      "titulo": "Proteção dos Rios e Igarapés contra Lixo e Óleo",
+      "categoria": "Saneamento e Rios",
       "duracao": "3 min",
-      "descricao": "Como evitar a contaminação dos rios por pilhas, óleos de motor de rabeta e plásticos que afetam os peixes e a saúde da família.",
+      "descricao": "Como descartar corretamente pilhas, baterias, embalagens plásticas e óleo queimado de motor de rabeta para não contaminar a água e os peixes.",
       "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "topicos_chave": ["Óleo de motor", "Microplásticos nos peixes", "Coleta comunitária"]
+      "topicos_chave": ["Óleo de embarcações", "Plástico nos rios", "Saúde dos peixes"],
+      "perguntas_rapidas": [
+        "Por que o óleo de motor jogado no rio faz mal aos peixes?",
+        "Onde guardar pilhas e plásticos até levar para a cidade?",
+        "Como organizar um mutirão de limpeza no igarapé?"
+      ]
     }
   ],
   "cultura": [
@@ -63,27 +93,42 @@
       "titulo": "A Lenda da Cobra Grande (Boiúna)",
       "categoria": "Lendas Amazônicas",
       "duracao": "4 min",
-      "descricao": "Animação sobre uma das histórias mais tradicionais dos rios da Amazônia, transmitida de geração em geração pelos contadores de histórias.",
+      "descricao": "Animação folclórica sobre a misteriosa serpente encantada que habita as profundezas dos rios amazônicos e protege as águas contra quem desrespeita a natureza.",
       "video_url": "https://www.youtube.com/watch?v=LXb3EKWsInQ",
-      "topicos_chave": ["Folclore do Tapajós e Amazonas", "Tradição oral", "Respeito aos rios"]
+      "topicos_chave": ["Folclore amazônico", "Mistérios dos rios", "Tradição oral"],
+      "perguntas_rapidas": [
+        "Qual é a lição principal da lenda da Cobra Grande?",
+        "Em quais rios da Amazônia essa história é mais contada?",
+        "Você conhece outras lendas sobre encantados das águas?"
+      ]
     },
     {
       "id": "cult_2",
       "titulo": "O Encantado Boto Cor-de-Rosa",
       "categoria": "Folclore Regional",
       "duracao": "3 min",
-      "descricao": "A história do encantado das águas nas festas ribeirinhas e o significado cultural dessa lenda para a preservação do boto-vermelho.",
+      "descricao": "A tradicional história do boto que se transforma em rapaz elegante nas festas ribeirinhas e a importância de preservar o boto-vermelho nos rios da região.",
       "video_url": "https://www.youtube.com/watch?v=9bZkp7q19f0",
-      "topicos_chave": ["Festas comunitárias", "Encantados da Amazônia", "Preservação do boto"]
+      "topicos_chave": ["Festas comunitárias", "Encantados", "Preservação do boto"],
+      "perguntas_rapidas": [
+        "Como reconhecer o boto encantado segundo a lenda?",
+        "Por que o boto-cor-de-rosa é importante para o equilíbrio do rio?",
+        "Me conte outra história folclórica da Amazônia!"
+      ]
     },
     {
       "id": "cult_3",
-      "titulo": "Saberes da Comunidade: Farinhada e Cultura Local",
-      "categoria": "História da Comunidade",
-      "duracao": "5 min",
-      "descricao": "Registro cultural sobre o trabalho coletivo na casa de farinha, o cultivo da mandioca e a memória dos moradores mais antigos.",
+      "titulo": "O Curupira: Protetor das Matas e dos Animais",
+      "categoria": "Folclore e Natureza",
+      "duracao": "3 min",
+      "descricao": "Com cabelos cor de fogo e pés virados para trás para despistar caçadores, o Curupira ensina o respeito aos animais e à floresta amazônica.",
       "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "topicos_chave": ["Casa de farinha", "Memória oral", "Cultura ribeirinha"]
+      "topicos_chave": ["Guardião da floresta", "Pés virados para trás", "Respeito à fauna"],
+      "perguntas_rapidas": [
+        "Por que o Curupira tem os pés virados para trás?",
+        "Como o Curupira protege os animais da floresta?",
+        "Quais outros protetores da floresta existem no folclore?"
+      ]
     }
   ]
 }

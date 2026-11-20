@@ -454,7 +454,8 @@ elif st.session_state.pagina_atual == "saude":
         chave_modulo="saude",
         titulo_pagina="🩺 Saúde e Bem-Estar",
         subtitulo="Vídeos educativos sobre prevenção de doenças, higiene da água e saúde comunitária.",
-        llm=llm
+        llm=llm,
+        stt=stt
     )
 
 elif st.session_state.pagina_atual == "ambiental":
@@ -462,7 +463,8 @@ elif st.session_state.pagina_atual == "ambiental":
         chave_modulo="ambiental",
         titulo_pagina="🌱 Educação Ambiental",
         subtitulo="Preservação da Amazônia, rios voadores e práticas sustentáveis na comunidade.",
-        llm=llm
+        llm=llm,
+        stt=stt
     )
 
 elif st.session_state.pagina_atual == "cultura":
@@ -470,5 +472,6 @@ elif st.session_state.pagina_atual == "cultura":
         chave_modulo="cultura",
         titulo_pagina="🛶 Cultura e História",
         subtitulo="Lendas amazônicas, folclore regional e memórias das comunidades ribeirinhas.",
-        llm=llm
+        llm=llm,
+        stt=stt
     )
