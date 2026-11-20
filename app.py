@@ -25,8 +25,8 @@ st.markdown("""
             background-color: #0A0D14 !important;
         }
         
-        /* Fontes e Texto */
-        h1, h2, h3, h4, p, span, label {
+        /* Fontes e Texto (sem afetar os ícones Material Symbols do Streamlit) */
+        h1, h2, h3, h4, p, label {
             font-family: 'Inter', sans-serif !important;
         }
 

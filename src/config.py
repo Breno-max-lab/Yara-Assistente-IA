@@ -11,8 +11,8 @@ def get_groq_api_key() -> str:
         api_key = st.secrets["GROQ_API_KEY"]
     return api_key or ""
 
-# Modelos atualizados para corrigir o erro 404
-LLM_MODEL = "llama-3.3-70b-specdec"  # O substituto gratuito mais forte e ativo
+# Modelo gratuito, rápido e ativo na Groq
+LLM_MODEL = "llama-3.1-8b-instant"
 STT_MODEL = "whisper-large-v3-turbo"
 
 # Voz neural em Português (Edge-TTS)
