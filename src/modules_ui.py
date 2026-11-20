@@ -7,6 +7,11 @@ import streamlit.components.v1 as components
 from src.llm_engine import LLMEngine
 from src.speech_engine import SpeechEngine
 from src.tts_engine import sintetizar_voz
+from src.video_curadoria import (
+    atualizar_catalogo_automatico,
+    buscar_videos_youtube,
+    gerar_ficha_pedagogica_ia,
+)
 
 DATA_PATH = Path(__file__).parent.parent / "data" / "conteudos_modulos.json"
 
@@ -432,7 +437,6 @@ def render_modulo_audiovisual(
     llm: LLMEngine,
     stt: SpeechEngine | None = None,
 ):
-    # CSS dedicado para a Vitrine estilo Streaming / Khan Academy
     st.markdown("""
     <style>
         .hero-video-badge {
@@ -494,8 +498,47 @@ def render_modulo_audiovisual(
     todos_dados = carregar_conteudos()
     conteudos = todos_dados.get(chave_modulo, [])
 
+    # --- BARRA DE CURADORIA AUTOMÁTICA COM IA ---
+    with st.expander("✨ Buscar e atualizar animações automaticamente por tema"):
+        col_auto1, col_auto2 = st.columns([2, 1])
+        with col_auto1:
+            tema_custom = st.text_input(
+                "Buscar nova animação no YouTube por assunto:",
+                key=f"busca_auto_{chave_modulo}",
+                placeholder="Ex: animação lenda da mandioca, higiene das mãos, queimadas...",
+                label_visibility="collapsed",
+            )
+        with col_auto2:
+            if st.button("🔍 Buscar e Adicionar", key=f"btn_busca_{chave_modulo}", use_container_width=True):
+                if tema_custom.strip():
+                    with st.spinner("Buscando animação e criando ficha educativa com a Yara..."):
+                        encontrados = buscar_videos_youtube(f"animação educativa {tema_custom}", limite=1)
+                        if encontrados:
+                            ficha = gerar_ficha_pedagogica_ia(llm, encontrados[0], "Busca Temática", chave_modulo)
+                            todos_dados.setdefault(chave_modulo, []).insert(0, ficha)
+                            salvar_conteudos(todos_dados)
+                            st.session_state[f"video_ativo_{chave_modulo}"] = ficha["id"]
+                            st.success(f"Vídeo '{ficha['titulo']}' adicionado!")
+                            st.rerun()
+                        else:
+                            st.warning("Não encontrei vídeos para esse termo. Tente palavras mais simples.")
+
+        if st.button(
+            "🔄 Renovar catálogo completo deste módulo automaticamente",
+            key=f"renovar_tudo_{chave_modulo}",
+            use_container_width=True,
+        ):
+            with st.spinner("A Yara está selecionando novas animações para todas as categorias deste módulo..."):
+                novos = atualizar_catalogo_automatico(llm, chave_modulo)
+                if novos:
+                    todos_dados[chave_modulo] = novos
+                    salvar_conteudos(todos_dados)
+                    st.session_state[f"video_ativo_{chave_modulo}"] = novos[0]["id"]
+                    st.success("Catálogo atualizado com vídeos reais e fichas geradas pela IA!")
+                    st.rerun()
+
     if not conteudos:
-        st.info("Nenhum vídeo cadastrado neste módulo ainda.")
+        st.info("Nenhum vídeo cadastrado neste módulo ainda. Use o botão acima para preencher automaticamente!")
         return
 
     # --- FILTRO POR CATEGORIA ---
@@ -519,7 +562,6 @@ def render_modulo_audiovisual(
         else [c for c in conteudos if c["categoria"] == cat_escolhida]
     )
 
-    # Controla qual vídeo está em destaque no Player Principal
     chave_selecao = f"video_ativo_{chave_modulo}"
     ids_validos = [v["id"] for v in lista_filtrada]
     if chave_selecao not in st.session_state or st.session_state[chave_selecao] not in ids_validos:
@@ -587,7 +629,6 @@ def render_modulo_audiovisual(
                 "audio": aud_bytes,
             }
 
-        # Botões de perguntas sugeridas (1 clique)
         perguntas_sugeridas = video_atual.get("perguntas_rapidas", [])
         if perguntas_sugeridas:
             cols_sug = st.columns(len(perguntas_sugeridas))
@@ -596,7 +637,6 @@ def render_modulo_audiovisual(
                     if st.button(f"💬 {p_sug}", key=f"sug_{video_atual['id']}_{i}", use_container_width=True):
                         responder_duvida_video(p_sug)
 
-        # Pergunta livre por texto ou voz
         col_txt, col_mic = st.columns([3.5, 1.5])
         with col_txt:
             pergunta_livre = st.text_input(
@@ -628,7 +668,6 @@ def render_modulo_audiovisual(
                 if transc and not transc.startswith("[Erro"):
                     responder_duvida_video(transc)
 
-        # Exibe a resposta da Yara sobre o vídeo (com áudio automático)
         if st.session_state[chave_chat_vid]:
             interacao = st.session_state[chave_chat_vid]
             st.info(f"**Sua pergunta:** {interacao['pergunta']}")
@@ -665,9 +704,9 @@ def render_modulo_audiovisual(
                 st.rerun()
 
     # ==========================================================================
-    # 3. PAINEL RÁPIDO PARA ADICIONAR NOVO VÍDEO (MODO PROFESSOR / MONITOR)
+    # 3. PAINEL RÁPIDO PARA ADICIONAR NOVO VÍDEO MANUALMENTE
     # ==========================================================================
-    with st.expander("➕ Adicionar novo vídeo ou animação neste módulo (Professor / PET)"):
+    with st.expander("➕ Adicionar link de vídeo manualmente (Professor / PET)"):
         with st.form(key=f"form_add_vid_{chave_modulo}", clear_on_submit=True):
             novo_titulo = st.text_input("Título do vídeo ou animação")
             col_c, col_d = st.columns(2)
