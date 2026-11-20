@@ -9,32 +9,27 @@ from src.tts_engine import sintetizar_voz
 
 DATA_PATH = Path(__file__).parent.parent / "data" / "conteudos_modulos.json"
 
+
 def carregar_conteudos() -> dict:
     with open(DATA_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def _extrair_palavra_e_fala(texto_bruto: str) -> tuple[str, str, str]:
-    """Separa a linha estruturada (PALAVRA / SILABAS) do texto que será falado pela Yara."""
+
+def _extrair_foco_e_fala(texto_bruto: str) -> tuple[str, str]:
+    """Extrai apenas a letra/sílaba gigante (FOCO:) e o texto curto que a Yara vai falar."""
     linhas = [l.strip() for l in texto_bruto.strip().splitlines() if l.strip()]
-    palavra = "RIO"
-    silabas = "RI - O"
+    foco = "A"
     fala = texto_bruto
 
-    if linhas and linhas[0].upper().startswith("PALAVRA:"):
-        cabecalho = linhas[0]
+    if linhas and linhas[0].upper().startswith("FOCO:"):
+        foco = linhas[0].split(":", 1)[1].strip().upper()
         fala = " ".join(linhas[1:]).strip()
-        partes = cabecalho.split("|")
-        for p in partes:
-            p_limpa = p.strip()
-            if p_limpa.upper().startswith("PALAVRA:"):
-                palavra = p_limpa.split(":", 1)[1].strip()
-            elif p_limpa.upper().startswith("SILABAS:") or p_limpa.upper().startswith("SÍLABAS:"):
-                silabas = p_limpa.split(":", 1)[1].strip()
 
-    return palavra, silabas, fala
+    return foco, fala
 
-def _render_orbe_siri_alexa(fala_yara: str, palavra: str, silabas: str, audio_b64: str | None, msg_idx: int):
-    """Renderiza o visual pulsante estilo Siri/Alexa com cartão grande de leitura."""
+
+def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str | None, msg_idx: int):
+    """Renderiza a tela minimalista estilo ChatGPT Voice com orbe verde-esmeralda fluido."""
     audio_html = (
         f'<audio id="yara_voice_{msg_idx}" src="data:audio/mp3;base64,{audio_b64}" autoplay></audio>'
         if audio_b64 else ""
@@ -45,285 +40,234 @@ def _render_orbe_siri_alexa(fala_yara: str, palavra: str, silabas: str, audio_b6
     <html>
     <head>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap');
         body {{
             margin: 0;
             padding: 0;
             background: transparent;
             font-family: 'Inter', sans-serif;
             color: #F8FAFC;
+            user-select: none;
         }}
-        .assistant-stage {{
-            background: radial-gradient(circle at top, #132A24 0%, #0F1624 75%);
-            border: 1px solid #1E3A34;
-            border-radius: 24px;
-            padding: 28px 24px;
-            text-align: center;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-        }}
-        /* Orbe animado estilo Siri/Alexa */
-        .orb-wrapper {{
+        .voice-stage {{
+            background: #05070B;
+            border: 1px solid #141E2B;
+            border-radius: 28px;
+            padding: 36px 20px 28px 20px;
             display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            margin-bottom: 16px;
+            text-align: center;
+            min-height: 360px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
         }}
-        .yara-orb {{
-            width: 78px;
-            height: 78px;
+
+        /* Círculo luminoso verde-esmeralda fluido (Estilo ChatGPT Voice) */
+        .orb-container {{
+            position: relative;
+            width: 170px;
+            height: 170px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }}
+        .emerald-orb {{
+            width: 155px;
+            height: 155px;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #6EE7B7, #10B981 55%, #047857 100%);
-            box-shadow: 0 0 25px rgba(16, 185, 129, 0.55), inset 0 0 14px rgba(255, 255, 255, 0.45);
-            animation: breathe 3s ease-in-out infinite;
-            transition: all 0.3s ease;
+            background:
+                radial-gradient(circle at 32% 28%, rgba(236, 253, 245, 0.95) 0%, rgba(110, 231, 183, 0.85) 28%, rgba(16, 185, 129, 0.92) 60%, rgba(4, 120, 87, 1) 100%);
+            box-shadow:
+                0 0 38px rgba(16, 185, 129, 0.45),
+                inset 0 -14px 26px rgba(6, 78, 59, 0.75);
+            animation: idleFloat 3.6s ease-in-out infinite;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
         }}
-        .yara-orb.speaking {{
-            animation: speakPulse 0.85s ease-in-out infinite alternate;
-            box-shadow: 0 0 42px rgba(52, 211, 153, 0.9), 0 0 70px rgba(16, 185, 129, 0.45);
+        .emerald-orb.speaking {{
+            animation: voiceWave 0.75s ease-in-out infinite alternate;
+            box-shadow:
+                0 0 55px rgba(52, 211, 153, 0.85),
+                0 0 95px rgba(16, 185, 129, 0.4),
+                inset 0 -10px 20px rgba(6, 78, 59, 0.6);
         }}
-        @keyframes breathe {{
-            0%, 100% {{ transform: scale(0.96); opacity: 0.88; }}
-            50% {{ transform: scale(1.04); opacity: 1; }}
+        @keyframes idleFloat {{
+            0%, 100% {{ transform: scale(0.97); }}
+            50% {{ transform: scale(1.03); }}
         }}
-        @keyframes speakPulse {{
-            0% {{ transform: scale(0.95); }}
-            100% {{ transform: scale(1.13); }}
-        }}
-
-        .status-pill {{
-            display: inline-block;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: #6EE7B7;
-            background: rgba(16, 185, 129, 0.14);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 4px 12px;
-            border-radius: 999px;
-            margin-bottom: 18px;
+        @keyframes voiceWave {{
+            0% {{ transform: scale(0.95); border-radius: 50%; }}
+            50% {{ transform: scale(1.08); border-radius: 48% 52% 50% 50%; }}
+            100% {{ transform: scale(1.13); border-radius: 50%; }}
         }}
 
-        /* Cartão Gigante da Palavra e Sílabas */
-        .word-board {{
-            background: #0B101B;
-            border: 1px solid #23334D;
-            border-radius: 18px;
-            padding: 18px 16px;
-            margin: 0 auto 20px auto;
-            max-width: 440px;
-        }}
-        .word-main {{
-            font-size: 38px;
+        /* Letra ou sílaba gigante única para associação visual sem textos longos */
+        .giant-letter {{
+            font-size: 64px;
             font-weight: 800;
-            letter-spacing: 0.12em;
             color: #FFFFFF;
-            margin: 0;
-        }}
-        .word-syllables {{
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: 0.14em;
-            color: #34D399;
-            margin-top: 6px;
+            letter-spacing: 0.08em;
+            line-height: 1;
+            margin-bottom: 12px;
+            text-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
         }}
 
-        /* Legenda da fala da Yara */
-        .speech-text {{
-            font-size: 19px;
-            line-height: 1.55;
-            color: #E2E8F0;
-            max-width: 620px;
-            margin: 0 auto 20px auto;
+        /* Indicador simples de estado */
+        .voice-status {{
+            font-size: 14px;
             font-weight: 500;
+            color: #94A3B8;
+            margin-bottom: 20px;
+        }}
+        .voice-status.active {{
+            color: #6EE7B7;
         }}
 
-        /* Botão grande para repetir o áudio */
-        .replay-btn {{
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #182638;
-            hover: #22354D;
-            color: #F8FAFC;
-            border: 1px solid #2E4463;
-            padding: 10px 20px;
+        /* Botão discreto para repetir o áudio */
+        .listen-again-btn {{
+            background: #111827;
+            color: #E2E8F0;
+            border: 1px solid #1F2937;
             border-radius: 999px;
+            padding: 10px 22px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             transition: all 0.2s ease;
         }}
-        .replay-btn:hover {{
+        .listen-again-btn:hover {{
             background: #10B981;
+            color: #042F2E;
             border-color: #10B981;
-            color: #06241B;
         }}
     </style>
     </head>
     <body>
         {audio_html}
-        <div class="assistant-stage">
-            <div class="orb-wrapper">
-                <div class="yara-orb" id="orb_{msg_idx}"></div>
-            </div>
-            <div class="status-pill" id="status_{msg_idx}">🌿 Yara • Professora de Voz</div>
-
-            <div class="word-board">
-                <div class="word-main">{palavra}</div>
-                <div class="word-syllables">{silabas}</div>
+        <div class="voice-stage">
+            <div class="orb-container">
+                <div class="emerald-orb" id="orb_{msg_idx}"></div>
             </div>
 
-            <div class="speech-text">“{fala_yara}”</div>
+            <div class="giant-letter">{foco_visual}</div>
+            <div class="voice-status" id="status_{msg_idx}">Toque no microfone abaixo para falar</div>
 
-            <button class="replay-btn" onclick="reproduzir_{msg_idx}()">
-                🔊 Ouvir a Yara novamente
+            <button class="listen-again-btn" onclick="tocarNovamente_{msg_idx}()">
+                🔊 Ouvir novamente
             </button>
         </div>
 
         <script>
-            const audioEl = document.getElementById('yara_voice_{msg_idx}');
-            const orbEl = document.getElementById('orb_{msg_idx}');
-            const statusEl = document.getElementById('status_{msg_idx}');
+            const aud = document.getElementById('yara_voice_{msg_idx}');
+            const orb = document.getElementById('orb_{msg_idx}');
+            const statusTxt = document.getElementById('status_{msg_idx}');
 
-            if (audioEl) {{
-                audioEl.onplay = () => {{
-                    orbEl.classList.add('speaking');
-                    statusEl.innerText = '🔊 Yara está falando...';
+            if (aud) {{
+                aud.onplay = () => {{
+                    orb.classList.add('speaking');
+                    statusTxt.classList.add('active');
+                    statusTxt.innerText = 'Yara está falando...';
                 }};
-                audioEl.onended = () => {{
-                    orbEl.classList.remove('speaking');
-                    statusEl.innerText = '🎙️ Sua vez de falar abaixo';
+                aud.onended = () => {{
+                    orb.classList.remove('speaking');
+                    statusTxt.classList.remove('active');
+                    statusTxt.innerText = 'Sua vez! Aperte o microfone para responder';
                 }};
-                audioEl.onpause = () => {{
-                    orbEl.classList.remove('speaking');
-                    statusEl.innerText = '🌿 Yara • Professora de Voz';
+                aud.onpause = () => {{
+                    orb.classList.remove('speaking');
+                    statusTxt.classList.remove('active');
+                    statusTxt.innerText = 'Aperte o microfone para falar';
                 }};
             }}
 
-            function reproduzir_{msg_idx}() {{
-                if (!audioEl) return;
-                audioEl.currentTime = 0;
-                audioEl.play();
+            function tocarNovamente_{msg_idx}() {{
+                if (!aud) return;
+                aud.currentTime = 0;
+                aud.play();
             }}
         </script>
     </body>
     </html>
     """
-    components.html(html_code, height=415)
+    components.html(html_code, height=430)
 
 
 def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
-    st.markdown("### 🗣️ Alfabetização por Voz")
-    st.caption("Converse com a Yara como em uma chamada. Ouça a lição e toque no microfone para responder.")
-
-    # Barra superior com nível de aprendizado e botão de reiniciar
-    col_niv, col_btn = st.columns([2.5, 1])
-    with col_niv:
-        nivel = st.selectbox(
-            "Nível da aula:",
-            [
-                "Nível 1: Letras e Sons Iniciais",
-                "Nível 2: Sílabas e Palavras do Dia a Dia",
-                "Nível 3: Leitura de Frases Curtas"
-            ],
-            label_visibility="collapsed"
+    # Inicializa a aula do zero (foco 100% auditivo e visual simples)
+    if "hist_alfabetizacao" not in st.session_state:
+        abertura_bruta = (
+            "FOCO: A\n"
+            "Olá! Eu sou a Yara e vou te ensinar a ler bem devagar, sem pressa. "
+            "Olha essa letra grandona na tela: é a letra A, de Água e Açaí. "
+            "Aperta o botão do microfone aqui embaixo e repete comigo: A!"
         )
-    with col_btn:
-        reiniciar = st.button("🔄 Nova Lição", use_container_width=True)
-
-    # Reinicia lição se clicar no botão ou mudar de nível
-    if (
-        reiniciar
-        or "hist_alfabetizacao" not in st.session_state
-        or st.session_state.get("nivel_alfab_atual") != nivel
-    ):
-        st.session_state.nivel_alfab_atual = nivel
-        if "Nível 1" in nivel:
-            abertura_bruta = (
-                "PALAVRA: LETRA A | SILABAS: A\n"
-                "Olá! Vamos começar pelo som das letras. Esta na tela é a letra A, de Açaí e Água. "
-                "Você consegue repetir o som da letra A e me dizer uma palavra que começa com ela?"
-            )
-        elif "Nível 2" in nivel:
-            abertura_bruta = (
-                "PALAVRA: RIO | SILABAS: RI - O\n"
-                "Olá! Vamos juntar as letras para ler a palavra RIO. O R com o I faz RI, e depois vem o O. "
-                "Repita comigo a palavra RIO, ou me diga outra palavra que você conhece!"
-            )
-        else:
-            abertura_bruta = (
-                "PALAVRA: O RIO É AZUL | SILABAS: O - RI - O - É - A - ZUL\n"
-                "Que bom ter você aqui! Vamos ler juntos uma frase curta: O rio é azul. "
-                "Tente ler essa frase em voz alta no microfone para eu ouvir!"
-            )
-
-        palavra, silabas, fala = _extrair_palavra_e_fala(abertura_bruta)
+        foco, fala = _extrair_foco_e_fala(abertura_bruta)
         audio_bytes = sintetizar_voz(fala)
         audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
 
         st.session_state.hist_alfabetizacao = [{"role": "assistant", "content": abertura_bruta}]
         st.session_state.alfab_visual = {
-            "palavra": palavra,
-            "silabas": silabas,
+            "foco": foco,
             "fala": fala,
             "audio_b64": audio_b64,
             "turno": 1
         }
-        if reiniciar:
-            st.rerun()
 
-    # Exibe o palco estilo Siri/Alexa com a palavra em destaque
     visual = st.session_state.alfab_visual
-    _render_orbe_siri_alexa(
+
+    # Palco principal estilo ChatGPT Voice (sem textos longos na tela)
+    _render_orbe_chatgpt_voice(
         fala_yara=visual["fala"],
-        palavra=visual["palavra"],
-        silabas=visual["silabas"],
+        foco_visual=visual["foco"],
         audio_b64=visual["audio_b64"],
         msg_idx=visual["turno"]
     )
 
-    # Área grande e acessível para o aluno falar
-    st.markdown("##### 🎙️ Toque no microfone abaixo para responder à Yara:")
-    audio_aluno = st.audio_input("Gravar resposta falada", key="mic_alfabetizacao", label_visibility="collapsed")
+    # Barra inferior limpa: Microfone grande à esquerda + Reiniciar (✕) à direita
+    col_mic, col_close = st.columns([4, 1])
+    with col_mic:
+        audio_aluno = st.audio_input(
+            "🎙️ Falar com a Yara",
+            key=f"mic_alfab_{visual['turno']}",
+            label_visibility="collapsed"
+        )
+    with col_close:
+        if st.button("✕", help="Recomeçar aula do início", use_container_width=True):
+            for k in ["hist_alfabetizacao", "alfab_visual", "ultimo_audio_alfab"]:
+                st.session_state.pop(k, None)
+            st.rerun()
 
+    # Processamento rápido do áudio do aluno
     if audio_aluno is not None:
         audio_bytes = audio_aluno.getvalue()
         if st.session_state.get("ultimo_audio_alfab") != audio_bytes:
             st.session_state.ultimo_audio_alfab = audio_bytes
-            with st.spinner("Yara está ouvindo você..."):
+            with st.spinner("Ouvindo..."):
                 texto_aluno = stt.transcrever_audio(audio_bytes)
 
             if texto_aluno:
                 st.session_state.hist_alfabetizacao.append({"role": "user", "content": texto_aluno})
-                with st.spinner("Preparando próxima lição..."):
+                with st.spinner("..."):
                     resposta_bruta = llm.gerar_resposta(
                         st.session_state.hist_alfabetizacao,
-                        modo="alfabetizacao",
-                        contexto_extra=f"Nível atual selecionado pelo aluno: {nivel}"
+                        modo="alfabetizacao"
                     )
-                    palavra, silabas, fala = _extrair_palavra_e_fala(resposta_bruta)
+                    foco, fala = _extrair_foco_e_fala(resposta_bruta)
                     audio_resp = sintetizar_voz(fala)
                     audio_b64 = base64.b64encode(audio_resp).decode("utf-8") if audio_resp else None
 
                 st.session_state.hist_alfabetizacao.append({"role": "assistant", "content": resposta_bruta})
                 st.session_state.alfab_visual = {
-                    "palavra": palavra,
-                    "silabas": silabas,
+                    "foco": foco,
                     "fala": fala,
                     "audio_b64": audio_b64,
                     "turno": visual["turno"] + 1
                 }
                 st.rerun()
-
-    # Histórico recolhível para acompanhamento do professor ou familiar
-    with st.expander("📖 Ver o que já praticamos nesta aula"):
-        for msg in st.session_state.hist_alfabetizacao:
-            if msg["role"] == "assistant":
-                _, _, fala_limpa = _extrair_palavra_e_fala(msg["content"])
-                st.markdown(f"**🌿 Yara:** {fala_limpa}")
-            else:
-                st.markdown(f"**🧑 Aluno:** {msg['content']}")
 
 
 def render_modulo_audiovisual(chave_modulo: str, titulo_pagina: str, subtitulo: str, llm: LLMEngine):

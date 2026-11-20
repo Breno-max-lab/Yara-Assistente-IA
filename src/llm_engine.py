@@ -56,8 +56,8 @@ class LLMEngine:
             resposta = self.client.chat.completions.create(
                 model=self.modelo_ativo,
                 messages=mensagens,
-                temperature=0.6 if modo == "geral" else 0.4,
-                max_tokens=300 if modo == "alfabetizacao" else 600,
+                temperature=0.6 if modo == "geral" else 0.35,
+                max_tokens=140 if modo == "alfabetizacao" else 600,
             )
             return resposta.choices[0].message.content.strip()
         except Exception as e:
