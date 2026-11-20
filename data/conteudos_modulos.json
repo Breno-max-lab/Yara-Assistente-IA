@@ -1,0 +1,89 @@
+{
+  "saude": [
+    {
+      "id": "saude_1",
+      "titulo": "Cuidados com a Água e Prevenção de Doenças",
+      "categoria": "Higiene e Prevenção",
+      "duracao": "3 min",
+      "descricao": "Como tratar a água do rio ou poço usando hipoclorito de sódio ou fervura para evitar diarreias, verminoses e hepatite A na comunidade.",
+      "video_url": "https://www.youtube.com/watch?v=9bZkp7q19f0",
+      "topicos_chave": ["Tratamento da água", "Hipoclorito de sódio", "Higiene das mãos"]
+    },
+    {
+      "id": "saude_2",
+      "titulo": "Prevenção contra Dengue, Malária e Arboviroses",
+      "categoria": "Saúde na Amazônia",
+      "duracao": "4 min",
+      "descricao": "Identificação dos sintomas iniciais, uso correto de mosquiteiros e eliminação de focos de água parada ao redor das casas e embarcações.",
+      "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "topicos_chave": ["Sintomas da malária e dengue", "Uso de mosquiteiro", "Quando procurar o posto de saúde"]
+    },
+    {
+      "id": "saude_3",
+      "titulo": "Primeiros Socorros: Picadas de Animais Peçonhentos",
+      "categoria": "Urgência",
+      "duracao": "5 min",
+      "descricao": "O que fazer e o que NUNCA fazer em casos de picadas de cobra, aranha ou escorpião antes de chegar ao atendimento médico.",
+      "video_url": "https://www.youtube.com/watch?v=LXb3EKWsInQ",
+      "topicos_chave": ["Lavar com água e sabão", "Não fazer torniquete", "Buscar soro antiofídico"]
+    }
+  ],
+  "ambiental": [
+    {
+      "id": "amb_1",
+      "titulo": "A Importância dos Rios Voadores e da Floresta em Pé",
+      "categoria": "Clima e Biodiversidade",
+      "duracao": "4 min",
+      "descricao": "Entenda como a floresta amazônica produz chuva para todo o Brasil e por que o equilíbrio dos igarapés garante o peixe e a colheita.",
+      "video_url": "https://www.youtube.com/watch?v=LXb3EKWsInQ",
+      "topicos_chave": ["Ciclo da água", "Preservação dos igarapés", "Clima regional"]
+    },
+    {
+      "id": "amb_2",
+      "titulo": "Queimadas e Fumaça: Impactos na Saúde e no Solo",
+      "categoria": "Problemas Ambientais",
+      "duracao": "3 min",
+      "descricao": "Os riscos do uso descontrolado do fogo no preparo da roça, alternativas de manejo sustentável e os danos respiratórios causados pela fumaça.",
+      "video_url": "https://www.youtube.com/watch?v=9bZkp7q19f0",
+      "topicos_chave": ["Manejo sem fogo", "Saúde respiratória", "Empobrecimento do solo"]
+    },
+    {
+      "id": "amb_3",
+      "titulo": "Descarte Correto de Lixo e Plásticos nos Rios",
+      "categoria": "Saneamento Comunitário",
+      "duracao": "3 min",
+      "descricao": "Como evitar a contaminação dos rios por pilhas, óleos de motor de rabeta e plásticos que afetam os peixes e a saúde da família.",
+      "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "topicos_chave": ["Óleo de motor", "Microplásticos nos peixes", "Coleta comunitária"]
+    }
+  ],
+  "cultura": [
+    {
+      "id": "cult_1",
+      "titulo": "A Lenda da Cobra Grande (Boiúna)",
+      "categoria": "Lendas Amazônicas",
+      "duracao": "4 min",
+      "descricao": "Animação sobre uma das histórias mais tradicionais dos rios da Amazônia, transmitida de geração em geração pelos contadores de histórias.",
+      "video_url": "https://www.youtube.com/watch?v=LXb3EKWsInQ",
+      "topicos_chave": ["Folclore do Tapajós e Amazonas", "Tradição oral", "Respeito aos rios"]
+    },
+    {
+      "id": "cult_2",
+      "titulo": "O Encantado Boto Cor-de-Rosa",
+      "categoria": "Folclore Regional",
+      "duracao": "3 min",
+      "descricao": "A história do encantado das águas nas festas ribeirinhas e o significado cultural dessa lenda para a preservação do boto-vermelho.",
+      "video_url": "https://www.youtube.com/watch?v=9bZkp7q19f0",
+      "topicos_chave": ["Festas comunitárias", "Encantados da Amazônia", "Preservação do boto"]
+    },
+    {
+      "id": "cult_3",
+      "titulo": "Saberes da Comunidade: Farinhada e Cultura Local",
+      "categoria": "História da Comunidade",
+      "duracao": "5 min",
+      "descricao": "Registro cultural sobre o trabalho coletivo na casa de farinha, o cultivo da mandioca e a memória dos moradores mais antigos.",
+      "video_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "topicos_chave": ["Casa de farinha", "Memória oral", "Cultura ribeirinha"]
+    }
+  ]
+}
