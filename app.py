@@ -31,14 +31,15 @@ def carregar_logo_base64() -> str:
 
 LOGO_B64 = carregar_logo_base64()
 
-# --- CSS PROFISSIONAL + RESPONSIVIDADE MOBILE ---
+# --- CSS ESTILO GEMINI (PALETA GRAFITE ESCURA + SIDEBAR MINIMALISTA NO TOPO) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+    /* Paleta escura fiel ao Gemini */
     .stApp {
-        background-color: #0B0F17;
-        color: #E5E7EB;
+        background-color: #0D0F11;
+        color: #E3E5E8;
     }
     html, body, p, h1, h2, h3, h4, label, input, textarea, button {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -51,81 +52,170 @@ st.markdown("""
         visibility: hidden;
     }
 
-    /* Sidebar Minimalista */
+    /* =========================================================================
+       BARRA LATERAL ESTILO GEMINI (CANTO SUPERIOR ESQUERDO + ITENS LIMPOS)
+       ========================================================================= */
     section[data-testid="stSidebar"] {
-        background-color: #0F1522 !important;
-        border-right: 1px solid #1E293B;
+        background-color: #131517 !important;
+        border-right: 1px solid #1E2023;
+        width: 275px !important;
+    }
+    /* Remove o espaço gigante acima do topo da sidebar */
+    section[data-testid="stSidebar"] > div:first-child {
+        padding-top: 0.85rem !important;
+    }
+    div[data-testid="stSidebarHeader"] {
+        height: 1.5rem !important;
+        padding: 0 0.75rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+
+    /* Cabeçalho da marca Yara no canto superior esquerdo */
+    .gemini-brand-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.2rem 0.65rem 1.1rem 0.65rem;
+    }
+    .gemini-brand-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .gemini-brand-left img {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+    }
+    .gemini-brand-title {
+        font-size: 1.18rem;
+        font-weight: 600;
+        color: #E3E5E8;
+        letter-spacing: -0.01em;
+    }
+    .gemini-badge-pet {
+        font-size: 0.7rem;
+        color: #8E9297;
+        background: #1C1F22;
+        padding: 2px 7px;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    /* Botões de navegação da sidebar em formato de lista minimalista */
+    section[data-testid="stSidebar"] .stButton {
+        margin-bottom: -0.35rem !important;
     }
     section[data-testid="stSidebar"] .stButton > button {
-        background-color: transparent;
-        color: #CBD5E1;
-        border: 1px solid transparent;
-        border-radius: 10px;
-        text-align: left;
-        justify-content: flex-start;
-        padding: 0.6rem 0.9rem;
-        font-weight: 500;
-        transition: all 0.15s ease;
+        background-color: transparent !important;
+        color: #C4C7C5 !important;
+        border: none !important;
+        border-radius: 999px !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        padding: 0.52rem 0.95rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 400 !important;
+        box-shadow: none !important;
+        transition: background-color 0.15s ease, color 0.15s ease !important;
     }
     section[data-testid="stSidebar"] .stButton > button:hover {
-        background-color: #1E293B;
-        color: #FFFFFF;
-        border-color: #334155;
+        background-color: #1E2023 !important;
+        color: #FFFFFF !important;
     }
 
-    /* Botão Nova Conversa */
-    div[data-testid="stSidebar"] div.stButton:first-of-type > button {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    /* Item Ativo (Pílula escura arredondada idêntica à imagem do Gemini) */
+    section[data-testid="stSidebar"] div.nav-active .stButton > button {
+        background-color: #25282C !important;
         color: #FFFFFF !important;
+        font-weight: 500 !important;
+    }
+
+    /* Rótulo discreto de seção (igual "Notebooks" na imagem) */
+    .sidebar-section-label {
+        font-size: 0.78rem;
         font-weight: 600;
-        border: none;
-        box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+        color: #8E9297;
+        padding: 1.1rem 0.95rem 0.35rem 0.95rem;
+    }
+
+    /* Cartão discreto do perfil no rodapé da sidebar */
+    .sidebar-profile-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.55rem 0.75rem;
+        border-radius: 12px;
+        background-color: #191B1E;
+        margin-top: 0.4rem;
+    }
+    .profile-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10B981 0%, #047857 100%);
+        color: #FFFFFF;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
         justify-content: center;
     }
+    .profile-info-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #E3E5E8;
+        line-height: 1.2;
+    }
+    .profile-info-role {
+        font-size: 0.72rem;
+        color: #8E9297;
+    }
 
-    /* Coluna Central */
+    /* =========================================================================
+       ÁREA PRINCIPAL DE CONTEÚDO
+       ========================================================================= */
     .block-container {
-        max-width: 860px !important;
+        max-width: 840px !important;
         padding-top: 2rem !important;
         padding-bottom: 6.5rem !important;
         margin: 0 auto !important;
     }
 
-    /* Hero / Tela Inicial */
     .yara-hero {
         text-align: center;
         padding: 2.2rem 1rem 1.3rem 1rem;
         animation: fadeIn 0.4s ease-out;
     }
     .yara-hero img {
-        width: 82px;
-        height: 82px;
-        border-radius: 22px;
+        width: 76px;
+        height: 76px;
+        border-radius: 20px;
         margin-bottom: 1rem;
-        box-shadow: 0 8px 28px rgba(16, 185, 129, 0.22);
+        box-shadow: 0 8px 28px rgba(16, 185, 129, 0.2);
     }
     .yara-hero h1 {
-        font-size: 2.15rem;
-        font-weight: 700;
+        font-size: 2.1rem;
+        font-weight: 600;
         background: linear-gradient(90deg, #FFFFFF 0%, #6EE7B7 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 0.35rem;
     }
     .yara-hero p {
-        color: #94A3B8;
-        font-size: 1.02rem;
-        max-width: 500px;
+        color: #8E9297;
+        font-size: 1rem;
+        max-width: 490px;
         margin: 0 auto;
     }
 
     /* Prompt Chips */
     div.prompt-chip button {
-        background-color: #131B2E !important;
-        border: 1px solid #1E293B !important;
+        background-color: #16181B !important;
+        border: 1px solid #23262A !important;
         border-radius: 14px !important;
         padding: 0.85rem 1rem !important;
-        color: #E2E8F0 !important;
+        color: #E3E5E8 !important;
         font-size: 0.9rem !important;
         text-align: left !important;
         justify-content: flex-start !important;
@@ -133,9 +223,9 @@ st.markdown("""
         transition: all 0.2s ease !important;
     }
     div.prompt-chip button:hover {
-        background-color: #1A253E !important;
+        background-color: #1E2125 !important;
         border-color: #10B981 !important;
-        transform: translateY(-2px);
+        transform: translateY(-1px);
     }
 
     /* Mensagens do Chat */
@@ -146,45 +236,34 @@ st.markdown("""
         gap: 0.9rem;
     }
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
-        background-color: #162033 !important;
-        border: 1px solid #24324D !important;
-        border-radius: 18px !important;
-        padding: 0.85rem 1.15rem !important;
+        background-color: #1A1D21 !important;
+        border: 1px solid #262A30 !important;
+        border-radius: 20px !important;
+        padding: 0.85rem 1.2rem !important;
         margin-left: 3.5rem;
     }
 
-    /* Barra de Entrada Unificada */
+    /* Barra de Entrada Inferior */
     div[data-testid="stChatInput"] {
-        background-color: #131B2E !important;
-        border: 1px solid #283754 !important;
-        border-radius: 26px !important;
-        padding: 4px 8px !important;
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
+        background-color: #16181B !important;
+        border: 1px solid #2A2E33 !important;
+        border-radius: 28px !important;
+        padding: 4px 10px !important;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4) !important;
     }
     div[data-testid="stChatInput"]:focus-within {
         border-color: #10B981 !important;
-        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.22) !important;
     }
 
-    /* Ajustes Responsivos para Smartphones */
     @media (max-width: 768px) {
         .block-container {
             padding-top: 1rem !important;
             padding-left: 0.85rem !important;
             padding-right: 0.85rem !important;
         }
-        .yara-hero {
-            padding: 1.2rem 0.5rem 1rem 0.5rem;
-        }
-        .yara-hero h1 {
-            font-size: 1.65rem;
-        }
-        .yara-hero p {
-            font-size: 0.92rem;
-        }
+        .yara-hero h1 { font-size: 1.65rem; }
         div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
             margin-left: 0.75rem;
-            padding: 0.7rem 0.9rem !important;
         }
     }
 
@@ -204,9 +283,8 @@ def inicializar_motores():
 llm, stt = inicializar_motores()
 
 
-# --- COMPONENTE DE BARRA DE ÍCONES ABAIXO DA RESPOSTA ---
+# --- BARRA DE ÍCONES COMPACTA ABAIXO DA RESPOSTA ---
 def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, auto_tocar: bool = False):
-    """Renderiza ícones compactos (Ouvir, Copiar, Gostei, Não gostei) com fallback de voz instantânea."""
     texto_escapado = (
         texto.replace("\\", "\\\\")
         .replace("`", "\\`")
@@ -240,7 +318,7 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
             gap: 5px;
             background: transparent;
             border: none;
-            color: #94A3B8;
+            color: #8E9297;
             padding: 5px 8px;
             border-radius: 8px;
             cursor: pointer;
@@ -248,7 +326,7 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
             transition: all 0.15s ease;
         }}
         .act-btn:hover {{
-            background: #1E293B;
+            background: #1E2023;
             color: #F8FAFC;
         }}
         .act-btn.active {{
@@ -309,14 +387,9 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
 
             function toggleAudio_{msg_id}() {{
                 if (aud) {{
-                    if (aud.paused) {{
-                        aud.play();
-                    }} else {{
-                        aud.pause();
-                    }}
+                    if (aud.paused) {{ aud.play(); }} else {{ aud.pause(); }}
                     return;
                 }}
-                // Modo economia de dados: usa voz local instantânea quando não há MP3 pré-carregado
                 if ('speechSynthesis' in window) {{
                     if (window.speechSynthesis.speaking) {{
                         window.speechSynthesis.cancel();
@@ -327,14 +400,8 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
                         const u = new SpeechSynthesisUtterance(textoLimpo);
                         u.lang = 'pt-BR';
                         u.rate = 1.0;
-                        u.onstart = () => {{
-                            btnPlay.classList.add('active');
-                            lblPlay.innerText = 'Pausar';
-                        }};
-                        u.onend = () => {{
-                            btnPlay.classList.remove('active');
-                            lblPlay.innerText = 'Ouvir';
-                        }};
+                        u.onstart = () => {{ btnPlay.classList.add('active'); lblPlay.innerText = 'Pausar'; }};
+                        u.onend = () => {{ btnPlay.classList.remove('active'); lblPlay.innerText = 'Ouvir'; }};
                         window.speechSynthesis.speak(u);
                     }}
                 }}
@@ -370,19 +437,31 @@ if "pagina_atual" not in st.session_state:
 if "mensagens_geral" not in st.session_state:
     st.session_state.mensagens_geral = []
 
-# --- BARRA LATERAL ---
+# ==============================================================================
+# BARRA LATERAL ESTILO GEMINI (MARCA NO TOPO ESQUERDO + LISTA LIMPA)
+# ==============================================================================
 with st.sidebar:
-    st.markdown("### 🌿 Yara IA")
-    st.caption("Assistente Educacional • PET UFOPA")
+    logo_topo = (
+        f'<img src="data:image/png;base64,{LOGO_B64}" alt="Yara">'
+        if LOGO_B64 else '<span style="font-size:1.3rem;">🌿</span>'
+    )
+    st.markdown(f"""
+    <div class="gemini-brand-header">
+        <div class="gemini-brand-left">
+            {logo_topo}
+            <span class="gemini-brand-title">Yara</span>
+        </div>
+        <span class="gemini-badge-pet">PET • UFOPA</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    if st.button("＋ Nova conversa", use_container_width=True):
+    # Ação principal no topo da lista (igual "Nova conversa" na imagem)
+    if st.button("📝   Nova conversa", key="btn_nova_conversa", use_container_width=True):
         st.session_state.mensagens_geral = []
         st.session_state.pagina_atual = "chat"
         st.rerun()
 
-    st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
-    st.caption("MÓDULOS DE APRENDIZAGEM")
-
+    # Lista limpa de módulos
     menu_itens = [
         ("💬", "Conversa Geral", "chat"),
         ("🗣️", "Alfabetização por Voz", "alfabetizacao"),
@@ -393,13 +472,16 @@ with st.sidebar:
 
     for icone, titulo, chave in menu_itens:
         ativo = st.session_state.pagina_atual == chave
-        prefixo = "▸ " if ativo else ""
-        if st.button(f"{prefixo}{icone}  {titulo}", key=f"nav_{chave}", use_container_width=True):
+        if ativo:
+            st.markdown('<div class="nav-active">', unsafe_allow_html=True)
+        if st.button(f"{icone}   {titulo}", key=f"nav_{chave}", use_container_width=True):
             st.session_state.pagina_atual = chave
             st.rerun()
+        if ativo:
+            st.markdown('</div>', unsafe_allow_html=True)
 
-    st.divider()
-    st.caption("PERFIL DE ACESSO")
+    # Seção dedicada para ferramentas do Professor (estilo seção "Notebooks" do Gemini)
+    st.markdown('<div class="sidebar-section-label">Modo de Uso</div>', unsafe_allow_html=True)
     perfil = st.radio(
         "Perfil de uso:",
         ["Aluno / Comunidade", "Professor / Monitor"],
@@ -407,25 +489,35 @@ with st.sidebar:
     )
 
     if perfil == "Professor / Monitor":
-        st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
         ativo_prof = st.session_state.pagina_atual == "professor"
-        if st.button(
-            f"{'▸ ' if ativo_prof else ''}🎓  Estúdio do Professor",
-            key="nav_professor",
-            use_container_width=True,
-        ):
+        if ativo_prof:
+            st.markdown('<div class="nav-active">', unsafe_allow_html=True)
+        if st.button("＋   Estúdio do Professor", key="nav_professor", use_container_width=True):
             st.session_state.pagina_atual = "professor"
             st.rerun()
+        if ativo_prof:
+            st.markdown('</div>', unsafe_allow_html=True)
 
-    st.divider()
-    st.caption("CONFIGURAÇÕES")
-    tocar_automatico = st.toggle("🔊 Voz neural automática (HD)", value=False, help="Desligado economiza dados móveis e acelera as respostas.")
+    st.markdown("<div style='height: 18px'></div>", unsafe_allow_html=True)
+    tocar_automatico = st.toggle("🔊 Voz neural automática", value=False)
 
-    st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
-    st.caption(f"⚡ Modelo ativo: `{llm.modelo_ativo}`")
+    # Rodapé estilo cartão de perfil do Gemini
+    nome_perfil = "Professor / Monitor" if perfil == "Professor / Monitor" else "Comunidade"
+    badge_plano = "Estúdio Ativo" if perfil == "Professor / Monitor" else "Acesso Livre"
+    inicial_avatar = "P" if perfil == "Professor / Monitor" else "Y"
+
+    st.markdown(f"""
+    <div class="sidebar-profile-card">
+        <div class="profile-avatar">{inicial_avatar}</div>
+        <div>
+            <div class="profile-info-name">{nome_perfil}</div>
+            <div class="profile-info-role">{badge_plano} • {llm.modelo_ativo.split('-')[0].upper()}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
-# --- PROCESSAMENTO DA PERGUNTA NO CHAT (COM RAG + ECONOMIA DE DADOS) ---
+# --- PROCESSAMENTO DA PERGUNTA NO CHAT ---
 def processar_pergunta_chat(pergunta: str):
     st.session_state.mensagens_geral.append({"role": "user", "content": pergunta})
     with st.spinner("Yara está pensando..."):
@@ -435,7 +527,6 @@ def processar_pergunta_chat(pergunta: str):
             modo="geral",
             contexto_extra=contexto_rag,
         )
-        # Só gera MP3 no servidor se a voz neural automática estiver ativada (economia de banda)
         audio_b64 = None
         if tocar_automatico:
             audio_bytes = sintetizar_voz(resposta)
@@ -455,7 +546,6 @@ def processar_pergunta_chat(pergunta: str):
 if st.session_state.pagina_atual == "chat":
     avatar_yara = "assets/yara_icone.png" if Path("assets/yara_icone.png").exists() else "🌿"
 
-    # 1. TELA INICIAL
     if not st.session_state.mensagens_geral:
         img_html = (
             f'<img src="data:image/png;base64,{LOGO_B64}" alt="Yara">'
@@ -484,7 +574,6 @@ if st.session_state.pagina_atual == "chat":
                     processar_pergunta_chat(texto_sug)
                 st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2. CONVERSA ATIVA
     else:
         total_msgs = len(st.session_state.mensagens_geral)
         for idx, msg in enumerate(st.session_state.mensagens_geral):
@@ -502,7 +591,6 @@ if st.session_state.pagina_atual == "chat":
                         auto_tocar=deve_tocar
                     )
 
-    # 3. BARRA DE ENTRADA UNIFICADA (TEXTO + MICROFONE)
     entrada = st.chat_input(
         "Peça à Yara...",
         accept_audio=True,
