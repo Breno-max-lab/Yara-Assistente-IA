@@ -1,7 +1,5 @@
-import base64
 import json
 import re
-import unicodedata
 from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
@@ -16,96 +14,63 @@ from src.video_curadoria import (
 
 DATA_PATH = Path(__file__).parent.parent / "data" / "conteudos_modulos.json"
 
-# Trilha lúdica para não-leitores (Figura grande + Letra/Sílaba + Palavra-âncora para o Whisper)
+# Trilha lúdica para não-leitores (Figura grande + Letra/Sílaba + Palavra-âncora)
 TRILHA_ALFABETIZACAO = [
     {
         "emoji": "🦜",
         "foco": "A",
         "palavra_alvo": "ARARA",
-        "aceitas": ["arara", "acai", "açaí", "agua", "água", "abelha", "amor", "avião", "aviao", "letra a"],
-        "dica_whisper": "Arara, Açaí, Água, Abelha, Letra A.",
-        "fala_inicial": (
-            "Oi, que alegria ter você na minha escolinha! Eu sou a professora Yara. "
-            "Olha o passarinho colorido e a letra A na tela: é o A de Arara! "
-            "Aperta o microfone aqui embaixo e fala bem bonito: Arara!"
-        ),
+        "aceitas": ["arara", "acai", "açaí", "agua", "água", "abelha", "amor", "aviao", "avião", "ara"],
+        "fala_inicial": "Oi, que alegria ter você na minha escolinha! Eu sou a professora Yara. Olha o passarinho colorido e a letra A na tela: é o A de Arara! Toca no botão verde do microfone e fala bem bonito: Arara!",
     },
     {
         "emoji": "⭐",
         "foco": "E",
         "palavra_alvo": "ESTRELA",
-        "aceitas": ["estrela", "escola", "elefante", "escada", "espelho", "letra e"],
-        "dica_whisper": "Estrela, Escola, Elefante, Escada, Letra E.",
-        "fala_inicial": (
-            "Agora olha essa figura brilhando junto com a letra E: é o E de Estrela! "
-            "Aperta o microfone e fala comigo bem forte: Estrela!"
-        ),
+        "aceitas": ["estrela", "escola", "elefante", "escada", "espelho"],
+        "fala_inicial": "Agora olha essa figura brilhando junto com a letra E: é o E de Estrela! Toca no microfone e fala comigo bem forte: Estrela!",
     },
     {
         "emoji": "🏝️",
         "foco": "I",
         "palavra_alvo": "ILHA",
-        "aceitas": ["ilha", "igarape", "igarapé", "indio", "índio", "igreja", "letra i"],
-        "dica_whisper": "Ilha, Igarapé, Índio, Igreja, Letra I.",
-        "fala_inicial": (
-            "Olha só a letra I fininha igual um lápis, junto com a Ilha no meio do rio! "
-            "Fala no microfone comigo: Ilha!"
-        ),
+        "aceitas": ["ilha", "igarape", "igarapé", "indio", "índio", "igreja"],
+        "fala_inicial": "Olha só a letra I fininha igual um lápis, junto com a Ilha no meio do rio! Toca no microfone e fala comigo: Ilha!",
     },
     {
         "emoji": "🐆",
         "foco": "O",
         "palavra_alvo": "ONÇA",
-        "aceitas": ["onca", "onça", "ovo", "onda", "olho", "orelha", "letra o"],
-        "dica_whisper": "Onça, Ovo, Onda, Olho, Letra O.",
-        "fala_inicial": (
-            "Essa letra redondinha igual uma bola é a letra O, de Onça pintada! "
-            "Aperta o microfone e fala comigo: Onça!"
-        ),
+        "aceitas": ["onca", "onça", "ovo", "onda", "olho", "orelha"],
+        "fala_inicial": "Essa letra redondinha igual uma bola é a letra O, de Onça pintada! Toca no microfone e fala comigo: Onça!",
     },
     {
         "emoji": "🍇",
         "foco": "U",
         "palavra_alvo": "UVA",
-        "aceitas": ["uva", "urubu", "urso", "unha", "letra u"],
-        "dica_whisper": "Uva, Urubu, Urso, Unha, Letra U.",
-        "fala_inicial": (
-            "Chegamos na última vogal, a letra U, de Uva e Urubu! "
-            "Faz biquinho e fala no microfone: Uva!"
-        ),
+        "aceitas": ["uva", "urubu", "urso", "unha"],
+        "fala_inicial": "Chegamos na última vogal, a letra U, de Uva e Urubu! Faz biquinho e fala no microfone: Uva!",
     },
     {
         "emoji": "🍌",
         "foco": "BA",
         "palavra_alvo": "BANANA",
-        "aceitas": ["banana", "barco", "baleia", "batata", "bacia", "ba"],
-        "dica_whisper": "Banana, Barco, Baleia, Batata, Ba.",
-        "fala_inicial": (
-            "Você já conhece todas as vogais! Agora quando o B dá a mão para o A, faz BA, de Banana! "
-            "Aperta o microfone e fala comigo: Banana!"
-        ),
+        "aceitas": ["banana", "barco", "baleia", "batata", "bacia"],
+        "fala_inicial": "Você já conhece todas as vogais! Agora quando o B dá a mão para o A, faz BA, de Banana! Toca no microfone e fala comigo: Banana!",
     },
     {
         "emoji": "🐬",
         "foco": "BO",
         "palavra_alvo": "BOTO",
-        "aceitas": ["boto", "bola", "bolo", "boca", "botina", "bo"],
-        "dica_whisper": "Boto, Bola, Bolo, Boca, Bo.",
-        "fala_inicial": (
-            "E quando o B dá a mão para o O, faz BO, de Boto cor-de-rosa! "
-            "Fala no microfone para a professora ouvir: Boto!"
-        ),
+        "aceitas": ["boto", "bola", "bolo", "boca", "botina"],
+        "fala_inicial": "E quando o B dá a mão para o O, faz BO, de Boto cor-de-rosa! Fala no microfone para a professora ouvir: Boto!",
     },
     {
         "emoji": "🛶",
         "foco": "CA",
         "palavra_alvo": "CANOA",
-        "aceitas": ["canoa", "casa", "cachorro", "cavalo", "camisa", "ca"],
-        "dica_whisper": "Canoa, Casa, Cachorro, Cavalo, Ca.",
-        "fala_inicial": (
-            "Para fechar com chave de ouro, o C com o A faz CA, de Canoa! "
-            "Aperta o microfone e fala bem alegre: Canoa!"
-        ),
+        "aceitas": ["canoa", "casa", "cachorro", "cavalo", "camisa"],
+        "fala_inicial": "Para fechar com chave de ouro, o C com o A faz CA, de Canoa! Toca no microfone e fala bem alegre: Canoa!",
     },
 ]
 
@@ -124,6 +89,7 @@ def salvar_conteudos(dados: dict):
 
 
 def _extrair_thumbnail_youtube(url: str) -> str:
+    """Extrai a imagem de capa (thumbnail) automática se o link for do YouTube."""
     padrao = r"(?:v=|\/)([0-9A-Za-z_-]{11}).*"
     match = re.search(padrao, url or "")
     if match:
@@ -133,51 +99,20 @@ def _extrair_thumbnail_youtube(url: str) -> str:
 
 
 # ==============================================================================
-# MÓDULO 1: ALFABETIZAÇÃO POR VOZ (PROFESSORA INFANTIL + ORBE VERDE-ESMERALDA)
+# MÓDULO 1: ALFABETIZAÇÃO POR VOZ (TEMPO REAL NO NAVEGADOR, ZERO TRAVAMENTO)
 # ==============================================================================
-def _normalizar_texto(txt: str) -> str:
-    nfkd = unicodedata.normalize("NFKD", txt.lower())
-    return "".join(c for c in nfkd if not unicodedata.combining(c))
+def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
+    """Escolinha de Voz em tempo real (zero travamento, 100% orientada por voz no navegador)."""
+    trilha_json = json.dumps(TRILHA_ALFABETIZACAO, ensure_ascii=False)
 
-
-def _avaliar_resposta_professora(texto_bruto: str) -> tuple[bool, str]:
-    linhas = [l.strip() for l in texto_bruto.strip().splitlines() if l.strip()]
-    acertou = False
-    fala = texto_bruto
-
-    if linhas and linhas[0].upper().startswith("STATUS:"):
-        status_str = linhas[0].split(":", 1)[1].strip().upper()
-        acertou = "ACERTOU" in status_str
-        fala = " ".join(linhas[1:]).strip()
-
-    return acertou, fala
-
-
-def _render_palco_professora_yara(
-    fala_yara: str,
-    emoji_visual: str,
-    foco_visual: str,
-    estrelas: int,
-    total_etapas: int,
-    audio_b64: str | None,
-    render_id: int,
-):
-    fala_js = json.dumps(fala_yara)
-    estrelas_html = "".join(
-        f'<span class="star {"earned" if i < estrelas else ""}">★</span>'
-        for i in range(total_etapas)
-    )
-    audio_tag = (
-        f'<audio id="yara_aud_{render_id}" src="data:audio/mp3;base64,{audio_b64}" preload="auto"></audio>'
-        if audio_b64 else ""
-    )
-
-    html_code = f"""
+    html_app = f"""
     <!DOCTYPE html>
     <html>
     <head>
+    <meta charset="utf-8">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap');
+        * {{ box-sizing: border-box; }}
         body {{
             margin: 0;
             padding: 0;
@@ -186,91 +121,92 @@ def _render_palco_professora_yara(
             color: #F8FAFC;
             user-select: none;
         }}
-        .voice-stage {{
+        .stage {{
             background: #05070B;
             border: 1px solid #141E2B;
             border-radius: 28px;
-            padding: 22px 20px 24px 20px;
+            padding: 26px 20px 30px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             text-align: center;
-            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65);
         }}
+
+        /* Estrelas */
         .stars-bar {{
             display: flex;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
             background: #0D131F;
-            padding: 6px 16px;
+            padding: 6px 18px;
             border-radius: 999px;
             border: 1px solid #1E293B;
         }}
         .star {{
-            font-size: 20px;
+            font-size: 22px;
             color: #263244;
-            transition: all 0.3s ease;
+            transition: all 0.35s ease;
         }}
         .star.earned {{
             color: #FBBF24;
-            text-shadow: 0 0 12px rgba(251, 191, 36, 0.75);
-            transform: scale(1.12);
+            text-shadow: 0 0 14px rgba(251, 191, 36, 0.85);
+            transform: scale(1.18);
         }}
-        .orb-container {{
-            width: 130px;
-            height: 130px;
+
+        /* Orbe Verde-Esmeralda */
+        .orb-wrap {{
+            width: 145px;
+            height: 145px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
             cursor: pointer;
         }}
-        .emerald-orb {{
-            width: 118px;
-            height: 118px;
+        .orb {{
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
-            background:
-                radial-gradient(circle at 32% 28%, rgba(236, 253, 245, 0.95) 0%, rgba(110, 231, 183, 0.85) 28%, rgba(16, 185, 129, 0.92) 60%, rgba(4, 120, 87, 1) 100%);
-            box-shadow:
-                0 0 34px rgba(16, 185, 129, 0.45),
-                inset 0 -12px 22px rgba(6, 78, 59, 0.75);
-            animation: idleFloat 3.6s ease-in-out infinite;
+            background: radial-gradient(circle at 32% 28%, #ECFDF5 0%, #6EE7B7 28%, #10B981 60%, #047857 100%);
+            box-shadow: 0 0 34px rgba(16, 185, 129, 0.45), inset 0 -12px 22px rgba(6, 78, 59, 0.75);
+            animation: floatOrb 3.5s ease-in-out infinite;
+            transition: all 0.25s ease;
         }}
-        .emerald-orb.speaking {{
-            animation: voiceWave 0.65s ease-in-out infinite alternate;
-            box-shadow:
-                0 0 52px rgba(52, 211, 153, 0.9),
-                0 0 90px rgba(16, 185, 129, 0.45);
+        .orb.speaking {{
+            animation: speakOrb 0.6s ease-in-out infinite alternate;
+            box-shadow: 0 0 55px rgba(52, 211, 153, 0.95), 0 0 95px rgba(16, 185, 129, 0.5);
         }}
-        @keyframes idleFloat {{
+        .orb.listening {{
+            background: radial-gradient(circle at 32% 28%, #FEF3C7 0%, #FCD34D 30%, #F59E0B 65%, #B45309 100%);
+            box-shadow: 0 0 50px rgba(245, 158, 11, 0.85);
+            animation: speakOrb 0.7s ease-in-out infinite alternate;
+        }}
+        @keyframes floatOrb {{
             0%, 100% {{ transform: scale(0.97); }}
             50% {{ transform: scale(1.03); }}
         }}
-        @keyframes voiceWave {{
+        @keyframes speakOrb {{
             0% {{ transform: scale(0.94); border-radius: 50%; }}
             50% {{ transform: scale(1.09); border-radius: 47% 53% 50% 50%; }}
             100% {{ transform: scale(1.14); border-radius: 50%; }}
         }}
 
-        /* Associação Visual: Figura Grande + Letra Gigante */
-        .visual-cue {{
+        /* Figura + Letra Gigante */
+        .cue-box {{
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 22px;
+            gap: 24px;
             background: #0D131F;
             border: 1px solid #1E293B;
             border-radius: 22px;
-            padding: 12px 28px;
-            margin-bottom: 12px;
+            padding: 14px 32px;
+            margin-bottom: 14px;
         }}
-        .cue-emoji {{
-            font-size: 58px;
-            line-height: 1;
-        }}
-        .giant-letter {{
-            font-size: 68px;
+        .cue-emoji {{ font-size: 62px; line-height: 1; }}
+        .cue-letter {{
+            font-size: 72px;
             font-weight: 800;
             color: #FFFFFF;
             letter-spacing: 0.06em;
@@ -278,236 +214,339 @@ def _render_palco_professora_yara(
             text-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
         }}
 
-        .voice-status {{
-            font-size: 14px;
-            font-weight: 500;
+        .status-msg {{
+            font-size: 15px;
+            font-weight: 600;
             color: #94A3B8;
-            margin-bottom: 16px;
+            min-height: 22px;
+            margin-bottom: 6px;
         }}
-        .voice-status.active {{
-            color: #6EE7B7;
+        .status-msg.highlight {{ color: #6EE7B7; }}
+        .status-msg.listen {{ color: #FCD34D; }}
+
+        .heard-text {{
+            font-size: 13.5px;
+            color: #CBD5E1;
+            min-height: 20px;
+            margin-bottom: 18px;
+            font-style: italic;
         }}
-        .listen-again-btn {{
+
+        /* Controles Inferiores Grandes e Acessíveis */
+        .controls {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }}
+        .btn-mic {{
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 999px;
+            padding: 16px 32px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.35);
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }}
+        .btn-mic:hover {{ filter: brightness(1.08); transform: translateY(-1px); }}
+        .btn-mic.recording {{
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+            box-shadow: 0 6px 24px rgba(245, 158, 11, 0.45);
+        }}
+
+        .btn-sec {{
             background: #111827;
             color: #E2E8F0;
             border: 1px solid #1F2937;
             border-radius: 999px;
-            padding: 10px 22px;
+            padding: 14px 20px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
         }}
-        .listen-again-btn:hover {{
-            background: #10B981;
-            color: #042F2E;
-            border-color: #10B981;
+        .btn-sec:hover {{ background: #1E293B; border-color: #334155; }}
+
+        /* Tela inicial de 1 clique para liberar áudio do navegador */
+        .start-overlay {{
+            padding: 36px 16px;
         }}
+        .start-overlay h2 {{ margin: 12px 0 8px 0; font-size: 24px; }}
+        .start-overlay p {{ color: #94A3B8; max-width: 420px; margin: 0 auto 24px auto; font-size: 15px; }}
     </style>
     </head>
     <body>
-        {audio_tag}
-        <div class="voice-stage">
-            <div class="stars-bar">{estrelas_html}</div>
-            <div class="orb-container" onclick="tocarVoz_{render_id}()">
-                <div class="emerald-orb" id="orb_{render_id}"></div>
+        <div class="stage">
+            <!-- TELA DE ENTRADA (DESTRAVA VOZ DO NAVEGADOR) -->
+            <div id="tela_inicio" class="start-overlay">
+                <div style="font-size: 64px;">🌿🦜</div>
+                <h2>Escolinha de Voz da Professora Yara</h2>
+                <p>Aperte o botão verde abaixo para ouvir a professora e começar a brincar com os sons das letras!</p>
+                <button class="btn-mic" onclick="iniciarEscolinha()">
+                    ▶ Começar Aula Agora
+                </button>
             </div>
-            <div class="visual-cue">
-                <span class="cue-emoji">{emoji_visual}</span>
-                <span class="giant-letter">{foco_visual}</span>
+
+            <!-- PALCO ATIVO DA AULA -->
+            <div id="tela_aula" style="display:none; width:100%; flex-direction:column; align-items:center;">
+                <div class="stars-bar" id="stars_bar"></div>
+
+                <div class="orb-wrap" onclick="repetirFala()" title="Toque para ouvir de novo">
+                    <div class="orb" id="orb"></div>
+                </div>
+
+                <div class="cue-box">
+                    <span class="cue-emoji" id="cue_emoji">🦜</span>
+                    <span class="cue-letter" id="cue_letter">A</span>
+                </div>
+
+                <div class="status-msg" id="status_msg">Preparando...</div>
+                <div class="heard-text" id="heard_text"></div>
+
+                <div class="controls">
+                    <button class="btn-sec" onclick="repetirFala()" title="Ouvir novamente">
+                        🔊 Ouvir de novo
+                    </button>
+                    <button class="btn-mic" id="btn_mic" onclick="alternarMicrofone()">
+                        🎙️ Falar com a Yara
+                    </button>
+                    <button class="btn-sec" onclick="pularEtapa()" title="Próxima figura">
+                        ⏭️
+                    </button>
+                    <button class="btn-sec" onclick="reiniciarAula()" title="Recomeçar">
+                        ✕
+                    </button>
+                </div>
             </div>
-            <div class="voice-status" id="status_{render_id}">Aperte o microfone abaixo para falar</div>
-            <button class="listen-again-btn" onclick="tocarVoz_{render_id}()">
-                🔊 Ouvir a Professora Yara
-            </button>
         </div>
 
         <script>
-            const falaTexto = {fala_js};
-            const aud = document.getElementById('yara_aud_{render_id}');
-            const orb = document.getElementById('orb_{render_id}');
-            const statusTxt = document.getElementById('status_{render_id}');
+            const trilha = {trilha_json};
+            let etapaIdx = 0;
+            let estrelas = 0;
+            let falaAtual = "";
+            let reconhecimento = null;
+            let gravando = false;
+            let vozEscolhida = null;
 
-            function animarInicio() {{
-                orb.classList.add('speaking');
-                statusTxt.classList.add('active');
-                statusTxt.innerText = 'Professora Yara está falando...';
-            }}
-            function animarFim() {{
-                orb.classList.remove('speaking');
-                statusTxt.classList.remove('active');
-                statusTxt.innerText = 'Sua vez! Aperte o microfone abaixo e fale';
-            }}
-            function fallbackVozNavegador() {{
+            function carregarVozes() {{
                 if (!('speechSynthesis' in window)) return;
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(falaTexto);
-                u.lang = 'pt-BR';
-                u.rate = 0.96;
-                u.pitch = 1.08;
-                u.onstart = animarInicio;
-                u.onend = animarFim;
-                u.onerror = animarFim;
-                window.speechSynthesis.speak(u);
+                const vozes = window.speechSynthesis.getVoices();
+                vozEscolhida =
+                    vozes.find(v => v.lang.includes('pt-BR') && (v.name.includes('Maria') || v.name.includes('Francisca') || v.name.includes('Thalita') || v.name.includes('Google'))) ||
+                    vozes.find(v => v.lang.includes('pt'));
             }}
-            function tocarVoz_{render_id}() {{
-                if (aud) {{
-                    aud.currentTime = 0;
-                    const p = aud.play();
-                    if (p !== undefined) {{
-                        p.catch(() => fallbackVozNavegador());
-                    }}
-                }} else {{
-                    fallbackVozNavegador();
+            if ('speechSynthesis' in window) {{
+                carregarVozes();
+                window.speechSynthesis.onvoiceschanged = carregarVozes;
+            }}
+
+            function normalizar(str) {{
+                return str.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim();
+            }}
+
+            function renderizarEstrelas() {{
+                const bar = document.getElementById('stars_bar');
+                bar.innerHTML = '';
+                for (let i = 0; i < trilha.length; i++) {{
+                    const s = document.createElement('span');
+                    s.className = 'star' + (i < estrelas ? ' earned' : '');
+                    s.innerText = '★';
+                    bar.appendChild(s);
                 }}
             }}
-            if (aud) {{
-                aud.onplay = animarInicio;
-                aud.onended = animarFim;
-                aud.onpause = animarFim;
+
+            function atualizarTelaEtapa() {{
+                const item = trilha[etapaIdx];
+                document.getElementById('cue_emoji').innerText = item.emoji;
+                document.getElementById('cue_letter').innerText = item.foco;
+                renderizarEstrelas();
             }}
-            setTimeout(() => {{ tocarVoz_{render_id}(); }}, 100);
+
+            function falarYara(texto, callbackFim = null) {{
+                falaAtual = texto;
+                const orb = document.getElementById('orb');
+                const status = document.getElementById('status_msg');
+
+                if (!('speechSynthesis' in window)) {{
+                    status.innerText = texto;
+                    if (callbackFim) callbackFim();
+                    return;
+                }}
+
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(texto);
+                utter.lang = 'pt-BR';
+                if (vozEscolhida) utter.voice = vozEscolhida;
+                utter.rate = 0.96;
+                utter.pitch = 1.08;
+
+                utter.onstart = () => {{
+                    orb.classList.remove('listening');
+                    orb.classList.add('speaking');
+                    status.className = 'status-msg highlight';
+                    status.innerText = 'Professora Yara está falando...';
+                }};
+
+                utter.onend = () => {{
+                    orb.classList.remove('speaking');
+                    status.className = 'status-msg';
+                    status.innerText = 'Sua vez! Aperte o botão verde e fale';
+                    if (callbackFim) callbackFim();
+                }};
+
+                utter.onerror = () => {{
+                    orb.classList.remove('speaking');
+                    status.className = 'status-msg';
+                    status.innerText = 'Aperte o botão verde para falar';
+                }};
+
+                window.speechSynthesis.speak(utter);
+            }}
+
+            function iniciarEscolinha() {{
+                document.getElementById('tela_inicio').style.display = 'none';
+                document.getElementById('tela_aula').style.display = 'flex';
+                etapaIdx = 0;
+                estrelas = 0;
+                atualizarTelaEtapa();
+                falarYara(trilha[0].fala_inicial);
+            }}
+
+            function repetirFala() {{
+                if (falaAtual) falarYara(falaAtual);
+            }}
+
+            function pularEtapa() {{
+                etapaIdx = (etapaIdx + 1) % trilha.length;
+                document.getElementById('heard_text').innerText = '';
+                atualizarTelaEtapa();
+                falarYara(trilha[etapaIdx].fala_inicial);
+            }}
+
+            function reiniciarAula() {{
+                etapaIdx = 0;
+                estrelas = 0;
+                document.getElementById('heard_text').innerText = '';
+                atualizarTelaEtapa();
+                falarYara(trilha[0].fala_inicial);
+            }}
+
+            function avaliarFalaAluno(transcricao) {{
+                const item = trilha[etapaIdx];
+                const faladoNorm = normalizar(transcricao);
+                document.getElementById('heard_text').innerText = `Você falou: "${{transcricao}}"`;
+
+                const acertou = item.aceitas.some(palavra => faladoNorm.includes(normalizar(palavra)));
+
+                if (acertou) {{
+                    if (estrelas < trilha.length) estrelas++;
+                    const elogios = [
+                        `Ebaaa! Muito bem! Você falou ${{item.palavra_alvo}} direitinho e ganhou uma estrelinha!`,
+                        `Isso mesmo! Parabéns, você brilhou falando ${{item.palavra_alvo}}!`,
+                        `Que lindo! Palmas para você, acertou ${{item.palavra_alvo}} de primeira!`
+                    ];
+                    const elogio = elogios[etapaIdx % elogios.length];
+
+                    if (etapaIdx + 1 < trilha.length) {{
+                        etapaIdx++;
+                        atualizarTelaEtapa();
+                        const proximaFala = `${{elogio}} ${{trilha[etapaIdx].fala_inicial}}`;
+                        falarYara(proximaFala);
+                    }} else {{
+                        atualizarTelaEtapa();
+                        falarYara(`${{elogio}} Você completou todas as estrelinhas da escolinha hoje! Parabéns, campeão!`);
+                    }}
+                }} else {{
+                    const dica = `Quase lá! Vamos tentar juntinhos? Olha a figura na tela e fala bem pertinho do microfone: ${{item.palavra_alvo}}!`;
+                    falarYara(dica);
+                }}
+            }}
+
+            function alternarMicrofone() {{
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const status = document.getElementById('status_msg');
+                const orb = document.getElementById('orb');
+                const btnMic = document.getElementById('btn_mic');
+
+                if (!SpeechRec) {{
+                    status.innerText = 'Seu navegador não suporta reconhecimento de voz direto. Use o Google Chrome ou Edge.';
+                    return;
+                }}
+
+                if (gravando && reconhecimento) {{
+                    reconhecimento.stop();
+                    return;
+                }}
+
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+                reconhecimento = new SpeechRec();
+                reconhecimento.lang = 'pt-BR';
+                reconhecimento.interimResults = true;
+                reconhecimento.maxAlternatives = 3;
+
+                reconhecimento.onstart = () => {{
+                    gravando = true;
+                    orb.classList.remove('speaking');
+                    orb.classList.add('listening');
+                    btnMic.classList.add('recording');
+                    btnMic.innerHTML = '⏹️ Ouvindo... (Toque para enviar)';
+                    status.className = 'status-msg listen';
+                    status.innerText = 'Pode falar agora! Estou ouvindo...';
+                }};
+
+                let resultadoFinal = '';
+                reconhecimento.onresult = (event) => {{
+                    let parcial = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {{
+                        const texto = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {{
+                            resultadoFinal += texto;
+                        }} else {{
+                            parcial += texto;
+                        }}
+                    }}
+                    document.getElementById('heard_text').innerText = `Ouvindo: "${{resultadoFinal || parcial}}"`;
+                }};
+
+                reconhecimento.onerror = () => {{
+                    gravando = false;
+                    orb.classList.remove('listening');
+                    btnMic.classList.remove('recording');
+                    btnMic.innerHTML = '🎙️ Falar com a Yara';
+                    status.className = 'status-msg';
+                    status.innerText = 'Não ouvi bem. Aperte o botão verde e tente de novo!';
+                }};
+
+                reconhecimento.onend = () => {{
+                    gravando = false;
+                    orb.classList.remove('listening');
+                    btnMic.classList.remove('recording');
+                    btnMic.innerHTML = '🎙️ Falar com a Yara';
+
+                    if (resultadoFinal.trim()) {{
+                        avaliarFalaAluno(resultadoFinal.trim());
+                    }} else {{
+                        status.className = 'status-msg';
+                        status.innerText = 'Não captei nenhuma palavra. Aperte o microfone e fale de novo!';
+                    }}
+                }};
+
+                reconhecimento.start();
+            }}
         </script>
     </body>
     </html>
     """
-    components.html(html_code, height=445)
-
-
-def _preparar_etapa(indice_etapa: int, fala_customizada: str | None = None):
-    etapa = TRILHA_ALFABETIZACAO[indice_etapa]
-    fala = fala_customizada if fala_customizada else etapa["fala_inicial"]
-    audio_bytes = sintetizar_voz(fala)
-    audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
-
-    st.session_state.alfab_estado = {
-        "etapa_idx": indice_etapa,
-        "emoji": etapa["emoji"],
-        "foco": etapa["foco"],
-        "fala": fala,
-        "audio_b64": audio_b64,
-        "render_id": st.session_state.get("alfab_render_seq", 0) + 1,
-        "ultima_fala_aluno": "",
-    }
-    st.session_state.alfab_render_seq = st.session_state.alfab_estado["render_id"]
-
-
-def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
-    total_etapas = len(TRILHA_ALFABETIZACAO)
-
-    # Tela inicial com gesto explícito para destravar o áudio no navegador
-    if not st.session_state.get("alfab_iniciada", False):
-        st.markdown("""
-        <div style="background:#05070B; border:1px solid #141E2B; border-radius:28px; padding:48px 24px; text-align:center;">
-            <div style="font-size:64px; margin-bottom:12px;">🌿🦜</div>
-            <h2 style="color:#FFFFFF; margin-bottom:8px;">Escolinha de Voz da Professora Yara</h2>
-            <p style="color:#94A3B8; max-width:440px; margin:0 auto 24px auto;">
-                Vamos aprender os sons das letras e palavras brincando! Toque no botão abaixo para começar.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
-        if st.button("▶ Começar Aula com a Professora Yara", type="primary", use_container_width=True):
-            st.session_state.alfab_iniciada = True
-            st.session_state.alfab_estrelas = 0
-            _preparar_etapa(0)
-            st.rerun()
-        return
-
-    if "alfab_estado" not in st.session_state:
-        st.session_state.alfab_estrelas = 0
-        _preparar_etapa(0)
-
-    estado = st.session_state.alfab_estado
-    etapa_atual = TRILHA_ALFABETIZACAO[estado["etapa_idx"]]
-
-    _render_palco_professora_yara(
-        fala_yara=estado["fala"],
-        emoji_visual=estado["emoji"],
-        foco_visual=estado["foco"],
-        estrelas=st.session_state.get("alfab_estrelas", 0),
-        total_etapas=total_etapas,
-        audio_b64=estado["audio_b64"],
-        render_id=estado["render_id"],
-    )
-
-    col_mic, col_next, col_reset = st.columns([4, 1, 1])
-    with col_mic:
-        audio_aluno = st.audio_input(
-            "🎙️ Falar com a Professora Yara",
-            key=f"mic_alfab_{estado['render_id']}",
-            label_visibility="collapsed",
-        )
-    with col_next:
-        if st.button("⏭️", help="Ir para a próxima figura", use_container_width=True):
-            proxima = (estado["etapa_idx"] + 1) % total_etapas
-            _preparar_etapa(proxima)
-            st.rerun()
-    with col_reset:
-        if st.button("✕", help="Recomeçar escolinha do início", use_container_width=True):
-            st.session_state.alfab_estrelas = 0
-            st.session_state.pop("ultimo_audio_alfab", None)
-            _preparar_etapa(0)
-            st.rerun()
-
-    if estado.get("ultima_fala_aluno"):
-        st.caption(f"🎙️ Você falou: *\"{estado['ultima_fala_aluno']}\"*")
-
-    if audio_aluno is not None:
-        audio_bytes = audio_aluno.getvalue()
-        if st.session_state.get("ultimo_audio_alfab") != audio_bytes:
-            st.session_state.ultimo_audio_alfab = audio_bytes
-            with st.spinner("A professora Yara está ouvindo você..."):
-                texto_aluno = stt.transcrever_audio(
-                    audio_bytes,
-                    dica_contexto=etapa_atual["dica_whisper"],
-                )
-
-            if not texto_aluno or texto_aluno.startswith("[Erro"):
-                texto_aluno = ""
-
-            fala_norm = _normalizar_texto(texto_aluno)
-            aceitas_norm = [_normalizar_texto(p) for p in etapa_atual["aceitas"]]
-            acertou_direto = any(palavra in fala_norm for palavra in aceitas_norm if palavra)
-
-            if acertou_direto:
-                elogios = [
-                    f"Ebaaa! Muito bem, você falou {etapa_atual['palavra_alvo']} direitinho e ganhou uma estrelinha!",
-                    f"Isso mesmo! Parabéns, você brilhou falando {etapa_atual['palavra_alvo']}!",
-                    f"Que lindo! Palmas para você, acertou {etapa_atual['palavra_alvo']} de primeira!",
-                ]
-                fala_professora = elogios[estado["etapa_idx"] % len(elogios)]
-                acertou = True
-            else:
-                prompt_avaliacao = [
-                    {
-                        "role": "user",
-                        "content": (
-                            f"Lição atual: Letra/Sílaba '{etapa_atual['foco']}' (Palavra-alvo: '{etapa_atual['palavra_alvo']}'). "
-                            f"O que o aluno falou no microfone: '{texto_aluno or 'silêncio'}'."
-                        ),
-                    }
-                ]
-                with st.spinner("..."):
-                    resposta_bruta = llm.gerar_resposta(prompt_avaliacao, modo="alfabetizacao")
-                    acertou, fala_professora = _avaliar_resposta_professora(resposta_bruta)
-
-            if acertou:
-                st.session_state.alfab_estrelas = min(
-                    total_etapas, st.session_state.get("alfab_estrelas", 0) + 1
-                )
-                proxima_idx = (estado["etapa_idx"] + 1) % total_etapas
-                proxima_etapa = TRILHA_ALFABETIZACAO[proxima_idx]
-                fala_completa = f"{fala_professora} {proxima_etapa['fala_inicial']}"
-                _preparar_etapa(proxima_idx, fala_customizada=fala_completa)
-            else:
-                _preparar_etapa(estado["etapa_idx"], fala_customizada=fala_professora)
-
-            st.session_state.alfab_estado["ultima_fala_aluno"] = texto_aluno or "(Áudio muito baixinho)"
-            st.rerun()
+    components.html(html_app, height=520)
 
 
 # ==============================================================================
