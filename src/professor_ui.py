@@ -1,7 +1,16 @@
 import io
+from datetime import datetime
+from pathlib import Path
 import streamlit as st
 from docx import Document
 from src.llm_engine import LLMEngine
+from src.rag_engine import (
+    DOCS_DIR,
+    listar_documentos_pet,
+    salvar_documento_pet,
+)
+
+CATALOGO_PATH = Path(__file__).parent.parent / "data" / "conteudos_modulos.json"
 
 
 def _gerar_arquivo_docx(titulo: str, conteudo_markdown: str) -> bytes:
@@ -33,6 +42,21 @@ def _gerar_arquivo_docx(titulo: str, conteudo_markdown: str) -> bytes:
     return buffer.getvalue()
 
 
+def _registrar_no_historico_professor(titulo: str, categoria: str, conteudo: str):
+    if "prof_historico" not in st.session_state:
+        st.session_state.prof_historico = []
+
+    item = {
+        "id": len(st.session_state.prof_historico) + 1,
+        "hora": datetime.now().strftime("%H:%M"),
+        "titulo": titulo,
+        "categoria": categoria,
+        "conteudo": conteudo,
+    }
+    st.session_state.prof_historico.insert(0, item)
+    st.session_state.prof_resultado = item
+
+
 def render_painel_professor(llm: LLMEngine):
     st.markdown("""
     <style>
@@ -56,7 +80,7 @@ def render_painel_professor(llm: LLMEngine):
     </style>
     <div class="prof-banner">
         <h2>🎓 Estúdio Pedagógico do Professor</h2>
-        <p>Crie planos de aula alinhados à BNCC, provas com gabarito, apostilas contextualizadas e dinâmicas em segundos.</p>
+        <p>Crie planos de aula alinhados à BNCC, provas com gabarito, apostilas e gerencie a base de conhecimento da Yara.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -104,11 +128,12 @@ def render_painel_professor(llm: LLMEngine):
         )
 
     # --- ABAS DE FERRAMENTAS DO PROFESSOR ---
-    aba_plano, aba_prova, aba_apostila, aba_dinamica = st.tabs([
-        "📋 Plano de Aula (BNCC)",
-        "📝 Provas e Exercícios",
-        "📖 Texto de Apoio / Apostila",
-        "🎲 Dinâmicas e Atividades",
+    aba_plano, aba_prova, aba_apostila, aba_dinamica, aba_base = st.tabs([
+        "📋 Plano de Aula",
+        "📝 Provas",
+        "📖 Apostila",
+        "🎲 Dinâmicas",
+        "📚 Base & Backup",
     ])
 
     # ==========================================================================
@@ -153,10 +178,7 @@ def render_painel_professor(llm: LLMEngine):
                 )
                 with st.spinner("Yara está estruturando o plano de aula..."):
                     res = llm.gerar_resposta([{"role": "user", "content": prompt}], modo="professor")
-                st.session_state.prof_resultado = {
-                    "titulo": f"Plano de Aula - {disciplina} ({tema_aula})",
-                    "conteudo": res,
-                }
+                _registrar_no_historico_professor(f"Plano de Aula - {disciplina} ({tema_aula})", "Plano de Aula", res)
 
     # ==========================================================================
     # ABA 2: PROVAS E LISTAS DE EXERCÍCIOS
@@ -195,10 +217,7 @@ def render_painel_professor(llm: LLMEngine):
                 )
                 with st.spinner("Yara está elaborando as questões e o gabarito..."):
                     res = llm.gerar_resposta([{"role": "user", "content": prompt}], modo="professor")
-                st.session_state.prof_resultado = {
-                    "titulo": f"Avaliação - {disciplina} ({tema_aula})",
-                    "conteudo": res,
-                }
+                _registrar_no_historico_professor(f"Avaliação - {disciplina} ({tema_aula})", "Prova", res)
 
     # ==========================================================================
     # ABA 3: TEXTO DE APOIO / APOSTILA
@@ -228,10 +247,7 @@ def render_painel_professor(llm: LLMEngine):
                 )
                 with st.spinner("Yara está escrevendo o material de apoio..."):
                     res = llm.gerar_resposta([{"role": "user", "content": prompt}], modo="professor")
-                st.session_state.prof_resultado = {
-                    "titulo": f"Material de Apoio - {disciplina} ({tema_aula})",
-                    "conteudo": res,
-                }
+                _registrar_no_historico_professor(f"Material de Apoio - {disciplina} ({tema_aula})", "Apostila", res)
 
     # ==========================================================================
     # ABA 4: DINÂMICAS E ATIVIDADES LÚDICAS
@@ -254,14 +270,65 @@ def render_painel_professor(llm: LLMEngine):
                 )
                 with st.spinner("Yara está criando ideias de atividades práticas..."):
                     res = llm.gerar_resposta([{"role": "user", "content": prompt}], modo="professor")
-                st.session_state.prof_resultado = {
-                    "titulo": f"Dinâmicas - {disciplina} ({tema_aula})",
-                    "conteudo": res,
-                }
+                _registrar_no_historico_professor(f"Dinâmicas - {disciplina} ({tema_aula})", "Dinâmica", res)
 
     # ==========================================================================
-    # EXIBIÇÃO DO MATERIAL GERADO + BOTÕES DE DOWNLOAD (.DOCX E .TXT)
+    # ABA 5: BASE DE CONHECIMENTO (PDFs DO PET) & BACKUP DO CATÁLOGO
     # ==========================================================================
+    with aba_base:
+        st.markdown("#### 📚 Documentos e Cartilhas da Yara (RAG)")
+        st.caption("Envie cartilhas em PDF ou TXT (ex: manuais de saúde, apostilas do PET) para que a Yara use essas fontes nas respostas.")
+
+        arquivo_up = st.file_uploader(
+            "Enviar novo documento (.pdf ou .txt):",
+            type=["pdf", "txt", "md"],
+            key="upload_doc_pet",
+        )
+        if arquivo_up is not None:
+            if salvar_documento_pet(arquivo_up.name, arquivo_up.getvalue()):
+                st.success(f"Documento '{arquivo_up.name}' adicionado à memória da Yara!")
+
+        docs_ativos = listar_documentos_pet()
+        if docs_ativos:
+            st.markdown("**Documentos ativos na base:**")
+            for doc_nome in docs_ativos:
+                col_d1, col_d2 = st.columns([4, 1])
+                with col_d1:
+                    st.markdown(f"📄 `{doc_nome}`")
+                with col_d2:
+                    if st.button("🗑️", key=f"del_doc_{doc_nome}", help="Remover documento"):
+                        (DOCS_DIR / doc_nome).unlink(missing_ok=True)
+                        st.rerun()
+        else:
+            st.info("Nenhum documento cadastrado ainda. Você também pode colocar arquivos PDF diretamente na pasta `data/documentos_pet/` do repositório.")
+
+        st.divider()
+        st.markdown("#### 💾 Backup do Catálogo de Vídeos (Persistência)")
+        st.caption("Após renovar os vídeos automaticamente nos módulos, baixe o arquivo JSON atualizado para salvar definitivamente no seu GitHub.")
+        if CATALOGO_PATH.exists():
+            st.download_button(
+                label="⬇️ Baixar conteudos_modulos.json atualizado",
+                data=CATALOGO_PATH.read_bytes(),
+                file_name="conteudos_modulos.json",
+                mime="application/json",
+                use_container_width=True,
+            )
+
+    # ==========================================================================
+    # HISTÓRICO DA SESSÃO + EXIBIÇÃO DO MATERIAL GERADO
+    # ==========================================================================
+    historico_prof = st.session_state.get("prof_historico", [])
+    if len(historico_prof) > 1:
+        st.markdown("#### 🗂️ Materiais gerados nesta sessão")
+        opcoes_hist = [f"[{h['hora']}] {h['titulo']}" for h in historico_prof]
+        escolha_hist = st.selectbox(
+            "Alternar entre materiais já gerados:",
+            range(len(opcoes_hist)),
+            format_func=lambda idx: opcoes_hist[idx],
+            label_visibility="collapsed",
+        )
+        st.session_state.prof_resultado = historico_prof[escolha_hist]
+
     if "prof_resultado" in st.session_state and st.session_state.prof_resultado:
         resultado = st.session_state.prof_resultado
         st.markdown("---")
@@ -272,7 +339,7 @@ def render_painel_professor(llm: LLMEngine):
             with col_dl1:
                 docx_bytes = _gerar_arquivo_docx(resultado["titulo"], resultado["conteudo"])
                 st.download_button(
-                    label="⬇️ Baixar Word (.docx)",
+                    label="⬇️ Word (.docx)",
                     data=docx_bytes,
                     file_name=f"{resultado['titulo'].lower().replace(' ', '_')[:40]}.docx",
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -280,7 +347,7 @@ def render_painel_professor(llm: LLMEngine):
                 )
             with col_dl2:
                 st.download_button(
-                    label="⬇️ Baixar Texto (.txt)",
+                    label="⬇️ Texto (.txt)",
                     data=resultado["conteudo"].encode("utf-8"),
                     file_name=f"{resultado['titulo'].lower().replace(' ', '_')[:40]}.txt",
                     mime="text/plain",

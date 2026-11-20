@@ -5,6 +5,7 @@ import streamlit.components.v1 as components
 from src.llm_engine import LLMEngine
 from src.speech_engine import SpeechEngine
 from src.tts_engine import sintetizar_voz
+from src.rag_engine import buscar_contexto_documentos
 from src.modules_ui import render_modulo_alfabetizacao, render_modulo_audiovisual
 from src.professor_ui import render_painel_professor
 
@@ -30,7 +31,7 @@ def carregar_logo_base64() -> str:
 
 LOGO_B64 = carregar_logo_base64()
 
-# --- CSS PROFISSIONAL (ESTILO GEMINI / CLAUDE / CHATGPT) ---
+# --- CSS PROFISSIONAL + RESPONSIVIDADE MOBILE ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -93,7 +94,7 @@ st.markdown("""
     /* Hero / Tela Inicial */
     .yara-hero {
         text-align: center;
-        padding: 2.5rem 1rem 1.5rem 1rem;
+        padding: 2.2rem 1rem 1.3rem 1rem;
         animation: fadeIn 0.4s ease-out;
     }
     .yara-hero img {
@@ -152,7 +153,7 @@ st.markdown("""
         margin-left: 3.5rem;
     }
 
-    /* Barra de Entrada Unificada (Estilo Gemini / ChatGPT) */
+    /* Barra de Entrada Unificada */
     div[data-testid="stChatInput"] {
         background-color: #131B2E !important;
         border: 1px solid #283754 !important;
@@ -163,6 +164,28 @@ st.markdown("""
     div[data-testid="stChatInput"]:focus-within {
         border-color: #10B981 !important;
         box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.22) !important;
+    }
+
+    /* Ajustes Responsivos para Smartphones */
+    @media (max-width: 768px) {
+        .block-container {
+            padding-top: 1rem !important;
+            padding-left: 0.85rem !important;
+            padding-right: 0.85rem !important;
+        }
+        .yara-hero {
+            padding: 1.2rem 0.5rem 1rem 0.5rem;
+        }
+        .yara-hero h1 {
+            font-size: 1.65rem;
+        }
+        .yara-hero p {
+            font-size: 0.92rem;
+        }
+        div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
+            margin-left: 0.75rem;
+            padding: 0.7rem 0.9rem !important;
+        }
     }
 
     @keyframes fadeIn {
@@ -183,7 +206,7 @@ llm, stt = inicializar_motores()
 
 # --- COMPONENTE DE BARRA DE ÍCONES ABAIXO DA RESPOSTA ---
 def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, auto_tocar: bool = False):
-    """Renderiza ícones compactos (Ouvir, Copiar, Gostei, Não gostei) abaixo da resposta."""
+    """Renderiza ícones compactos (Ouvir, Copiar, Gostei, Não gostei) com fallback de voz instantânea."""
     texto_escapado = (
         texto.replace("\\", "\\\\")
         .replace("`", "\\`")
@@ -192,19 +215,6 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
     )
     audio_tag = (
         f'<audio id="aud_{msg_id}" src="data:audio/mp3;base64,{audio_b64}" {"autoplay" if auto_tocar else ""}></audio>'
-        if audio_b64 else ""
-    )
-    btn_audio_html = (
-        f"""
-        <button class="act-btn" id="btn_play_{msg_id}" onclick="toggleAudio_{msg_id}()" title="Ouvir resposta">
-            <svg id="ico_play_{msg_id}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-            </svg>
-            <span id="lbl_play_{msg_id}">Ouvir</span>
-        </button>
-        """
         if audio_b64 else ""
     )
 
@@ -250,7 +260,14 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
     <body>
         {audio_tag}
         <div class="actions-bar">
-            {btn_audio_html}
+            <button class="act-btn" id="btn_play_{msg_id}" onclick="toggleAudio_{msg_id}()" title="Ouvir resposta">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+                <span id="lbl_play_{msg_id}">Ouvir</span>
+            </button>
             <button class="act-btn" id="btn_copy_{msg_id}" onclick="copiarTexto_{msg_id}()" title="Copiar resposta">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -273,6 +290,7 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
             const aud = document.getElementById('aud_{msg_id}');
             const btnPlay = document.getElementById('btn_play_{msg_id}');
             const lblPlay = document.getElementById('lbl_play_{msg_id}');
+            const textoLimpo = `{texto_escapado}`.replace(/[*#_]/g, '');
 
             if (aud) {{
                 aud.onplay = () => {{
@@ -290,11 +308,35 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
             }}
 
             function toggleAudio_{msg_id}() {{
-                if (!aud) return;
-                if (aud.paused) {{
-                    aud.play();
-                }} else {{
-                    aud.pause();
+                if (aud) {{
+                    if (aud.paused) {{
+                        aud.play();
+                    }} else {{
+                        aud.pause();
+                    }}
+                    return;
+                }}
+                // Modo economia de dados: usa voz local instantânea quando não há MP3 pré-carregado
+                if ('speechSynthesis' in window) {{
+                    if (window.speechSynthesis.speaking) {{
+                        window.speechSynthesis.cancel();
+                        btnPlay.classList.remove('active');
+                        lblPlay.innerText = 'Ouvir';
+                    }} else {{
+                        window.speechSynthesis.cancel();
+                        const u = new SpeechSynthesisUtterance(textoLimpo);
+                        u.lang = 'pt-BR';
+                        u.rate = 1.0;
+                        u.onstart = () => {{
+                            btnPlay.classList.add('active');
+                            lblPlay.innerText = 'Pausar';
+                        }};
+                        u.onend = () => {{
+                            btnPlay.classList.remove('active');
+                            lblPlay.innerText = 'Ouvir';
+                        }};
+                        window.speechSynthesis.speak(u);
+                    }}
                 }}
             }}
 
@@ -377,25 +419,34 @@ with st.sidebar:
 
     st.divider()
     st.caption("CONFIGURAÇÕES")
-    tocar_automatico = st.toggle("🔊 Falar resposta automaticamente", value=False)
+    tocar_automatico = st.toggle("🔊 Voz neural automática (HD)", value=False, help="Desligado economiza dados móveis e acelera as respostas.")
 
     st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
     st.caption(f"⚡ Modelo ativo: `{llm.modelo_ativo}`")
 
 
-# --- PROCESSAMENTO DA PERGUNTA NO CHAT ---
+# --- PROCESSAMENTO DA PERGUNTA NO CHAT (COM RAG + ECONOMIA DE DADOS) ---
 def processar_pergunta_chat(pergunta: str):
     st.session_state.mensagens_geral.append({"role": "user", "content": pergunta})
     with st.spinner("Yara está pensando..."):
-        resposta = llm.gerar_resposta(st.session_state.mensagens_geral, modo="geral")
-        audio_bytes = sintetizar_voz(resposta)
-        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
+        contexto_rag = buscar_contexto_documentos(pergunta)
+        resposta = llm.gerar_resposta(
+            st.session_state.mensagens_geral,
+            modo="geral",
+            contexto_extra=contexto_rag,
+        )
+        # Só gera MP3 no servidor se a voz neural automática estiver ativada (economia de banda)
+        audio_b64 = None
+        if tocar_automatico:
+            audio_bytes = sintetizar_voz(resposta)
+            audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
 
     st.session_state.mensagens_geral.append({
         "role": "assistant",
         "content": resposta,
         "audio_b64": audio_b64,
-        "auto_tocar": tocar_automatico
+        "auto_tocar": tocar_automatico,
+        "usou_rag": bool(contexto_rag),
     })
     st.rerun()
 
@@ -404,7 +455,7 @@ def processar_pergunta_chat(pergunta: str):
 if st.session_state.pagina_atual == "chat":
     avatar_yara = "assets/yara_icone.png" if Path("assets/yara_icone.png").exists() else "🌿"
 
-    # 1. TELA INICIAL (ESTILO GEMINI / CLAUDE)
+    # 1. TELA INICIAL
     if not st.session_state.mensagens_geral:
         img_html = (
             f'<img src="data:image/png;base64,{LOGO_B64}" alt="Yara">'
@@ -441,6 +492,8 @@ if st.session_state.pagina_atual == "chat":
             with st.chat_message(msg["role"], avatar=avatar):
                 st.markdown(msg["content"])
                 if msg["role"] == "assistant":
+                    if msg.get("usou_rag"):
+                        st.caption("📚 *Baseado nos documentos do projeto*")
                     deve_tocar = msg.get("auto_tocar", False) and (idx == total_msgs - 1)
                     render_barra_acoes_resposta(
                         texto=msg["content"],
@@ -449,7 +502,7 @@ if st.session_state.pagina_atual == "chat":
                         auto_tocar=deve_tocar
                     )
 
-    # 3. BARRA DE ENTRADA UNIFICADA (TEXTO + MICROFONE NA MESMA BARRA)
+    # 3. BARRA DE ENTRADA UNIFICADA (TEXTO + MICROFONE)
     entrada = st.chat_input(
         "Peça à Yara...",
         accept_audio=True,
