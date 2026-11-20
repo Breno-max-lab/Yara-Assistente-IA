@@ -1,5 +1,12 @@
 from groq import Groq
-from src.config import get_groq_api_key, LLM_MODEL, PROMPT_CHAT_GERAL, PROMPT_ALFABETIZACAO
+from src.config import (
+    get_groq_api_key,
+    LLM_MODEL,
+    PROMPT_CHAT_GERAL,
+    PROMPT_ALFABETIZACAO,
+    PROMPT_PROFESSOR,
+)
+
 
 class LLMEngine:
     def __init__(self):
@@ -15,7 +22,6 @@ class LLMEngine:
             modelos = self.client.models.list().data
             ids_disponiveis = [m.id for m in modelos]
 
-            # Ordem de preferência entre modelos comuns da Groq
             preferidos = [
                 "llama-3.3-70b-versatile",
                 "llama-3.1-8b-instant",
@@ -30,7 +36,6 @@ class LLMEngine:
                 if pref in ids_disponiveis:
                     return pref
 
-            # Caso a Groq tenha lançado nomes novos, pega qualquer modelo de texto ativo
             ignorados = ("whisper", "tts", "guard", "safeguard", "embed", "vision")
             for mid in ids_disponiveis:
                 if not any(termo in mid.lower() for termo in ignorados):
@@ -40,13 +45,30 @@ class LLMEngine:
             pass
         return LLM_MODEL
 
-    def gerar_resposta(self, historico: list[dict], modo: str = "geral", contexto_extra: str = "") -> str:
+    def gerar_resposta(
+        self,
+        historico: list[dict],
+        modo: str = "geral",
+        contexto_extra: str = "",
+    ) -> str:
         if not self.client:
             return "⚠️ Chave da API Groq não configurada. Adicione GROQ_API_KEY nas configurações."
 
-        system_prompt = PROMPT_ALFABETIZACAO if modo == "alfabetizacao" else PROMPT_CHAT_GERAL
+        if modo == "alfabetizacao":
+            system_prompt = PROMPT_ALFABETIZACAO
+            tokens_limite = 140
+            temperatura = 0.35
+        elif modo == "professor":
+            system_prompt = PROMPT_PROFESSOR
+            tokens_limite = 2048
+            temperatura = 0.6
+        else:
+            system_prompt = PROMPT_CHAT_GERAL
+            tokens_limite = 600
+            temperatura = 0.6
+
         if contexto_extra:
-            system_prompt += f"\n\nContexto adicional do vídeo que o usuário está assistindo:\n{contexto_extra}"
+            system_prompt += f"\n\nContexto adicional:\n{contexto_extra}"
 
         mensagens = [{"role": "system", "content": system_prompt}]
         for msg in historico[-10:]:
@@ -56,10 +78,9 @@ class LLMEngine:
             resposta = self.client.chat.completions.create(
                 model=self.modelo_ativo,
                 messages=mensagens,
-                temperature=0.6 if modo == "geral" else 0.35,
-                max_tokens=140 if modo == "alfabetizacao" else 600,
+                temperature=temperatura,
+                max_tokens=tokens_limite,
             )
             return resposta.choices[0].message.content.strip()
         except Exception as e:
-            # Diagnóstico claro caso a conta não tenha nenhum modelo habilitado
             return f"Erro com o modelo '{self.modelo_ativo}': {str(e)}"

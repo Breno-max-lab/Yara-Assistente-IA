@@ -6,6 +6,7 @@ from src.llm_engine import LLMEngine
 from src.speech_engine import SpeechEngine
 from src.tts_engine import sintetizar_voz
 from src.modules_ui import render_modulo_alfabetizacao, render_modulo_audiovisual
+from src.professor_ui import render_painel_professor
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -14,6 +15,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
 
 def carregar_logo_base64() -> str:
     caminhos = [
@@ -24,6 +26,7 @@ def carregar_logo_base64() -> str:
         if caminho.exists():
             return base64.b64encode(caminho.read_bytes()).decode("utf-8")
     return ""
+
 
 LOGO_B64 = carregar_logo_base64()
 
@@ -81,7 +84,7 @@ st.markdown("""
 
     /* Coluna Central */
     .block-container {
-        max-width: 820px !important;
+        max-width: 860px !important;
         padding-top: 2rem !important;
         padding-bottom: 6.5rem !important;
         margin: 0 auto !important;
@@ -169,15 +172,18 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 @st.cache_resource
 def inicializar_motores():
     return LLMEngine(), SpeechEngine()
 
+
 llm, stt = inicializar_motores()
 
-# --- COMPONENTE DE BARRA DE ÍCONES ABAIXO DA RESPOSTA (ESTILO GEMINI/CHATGPT) ---
+
+# --- COMPONENTE DE BARRA DE ÍCONES ABAIXO DA RESPOSTA ---
 def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, auto_tocar: bool = False):
-    """Renderiza ícones compactos (Ouvir, Copiar, Gostei, Não gostei) sem barra gigante."""
+    """Renderiza ícones compactos (Ouvir, Copiar, Gostei, Não gostei) abaixo da resposta."""
     texto_escapado = (
         texto.replace("\\", "\\\\")
         .replace("`", "\\`")
@@ -315,6 +321,7 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
     """
     components.html(html_acoes, height=36)
 
+
 # --- CONTROLE DE ESTADO ---
 if "pagina_atual" not in st.session_state:
     st.session_state.pagina_atual = "chat"
@@ -350,18 +357,33 @@ with st.sidebar:
             st.rerun()
 
     st.divider()
-    st.caption("CONFIGURAÇÕES")
+    st.caption("PERFIL DE ACESSO")
     perfil = st.radio(
         "Perfil de uso:",
         ["Aluno / Comunidade", "Professor / Monitor"],
         label_visibility="collapsed"
     )
+
+    if perfil == "Professor / Monitor":
+        st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
+        ativo_prof = st.session_state.pagina_atual == "professor"
+        if st.button(
+            f"{'▸ ' if ativo_prof else ''}🎓  Estúdio do Professor",
+            key="nav_professor",
+            use_container_width=True,
+        ):
+            st.session_state.pagina_atual = "professor"
+            st.rerun()
+
+    st.divider()
+    st.caption("CONFIGURAÇÕES")
     tocar_automatico = st.toggle("🔊 Falar resposta automaticamente", value=False)
 
-    st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
     st.caption(f"⚡ Modelo ativo: `{llm.modelo_ativo}`")
 
-# --- PROCESSAMENTO DA PERGUNTA ---
+
+# --- PROCESSAMENTO DA PERGUNTA NO CHAT ---
 def processar_pergunta_chat(pergunta: str):
     st.session_state.mensagens_geral.append({"role": "user", "content": pergunta})
     with st.spinner("Yara está pensando..."):
@@ -376,6 +398,7 @@ def processar_pergunta_chat(pergunta: str):
         "auto_tocar": tocar_automatico
     })
     st.rerun()
+
 
 # --- ROTEAMENTO DAS TELAS ---
 if st.session_state.pagina_atual == "chat":
@@ -418,7 +441,6 @@ if st.session_state.pagina_atual == "chat":
             with st.chat_message(msg["role"], avatar=avatar):
                 st.markdown(msg["content"])
                 if msg["role"] == "assistant":
-                    # Só toca automaticamente se for a última mensagem recém-chegada
                     deve_tocar = msg.get("auto_tocar", False) and (idx == total_msgs - 1)
                     render_barra_acoes_resposta(
                         texto=msg["content"],
@@ -435,14 +457,12 @@ if st.session_state.pagina_atual == "chat":
     )
 
     if entrada:
-        # Caso o usuário tenha gravado áudio pelo microfone da barra
         if getattr(entrada, "audio", None) is not None:
             audio_bytes = entrada.audio.getvalue()
             with st.spinner("Ouvindo sua pergunta..."):
                 transcricao = stt.transcrever_audio(audio_bytes)
             if transcricao:
                 processar_pergunta_chat(transcricao)
-        # Caso o usuário tenha digitado texto
         elif getattr(entrada, "text", None):
             processar_pergunta_chat(entrada.text)
 
@@ -475,3 +495,6 @@ elif st.session_state.pagina_atual == "cultura":
         llm=llm,
         stt=stt
     )
+
+elif st.session_state.pagina_atual == "professor":
+    render_painel_professor(llm)
