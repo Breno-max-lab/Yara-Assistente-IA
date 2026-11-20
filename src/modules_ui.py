@@ -29,7 +29,7 @@ def _extrair_foco_e_fala(texto_bruto: str) -> tuple[str, str]:
 
 
 def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str | None, msg_idx: int):
-    """Renderiza a tela minimalista estilo ChatGPT Voice com garantia de reprodução de áudio."""
+    """Renderiza a tela minimalista estilo ChatGPT Voice com orbe verde-esmeralda pulsante."""
     fala_js = json.dumps(fala_yara)
     audio_html = (
         f'<audio id="yara_voice_{msg_idx}" src="data:audio/mp3;base64,{audio_b64}" preload="auto"></audio>'
@@ -87,10 +87,10 @@ def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str 
             transition: transform 0.25s ease, box-shadow 0.25s ease;
         }}
         .emerald-orb.speaking {{
-            animation: voiceWave 0.75s ease-in-out infinite alternate;
+            animation: voiceWave 0.7s ease-in-out infinite alternate;
             box-shadow:
-                0 0 55px rgba(52, 211, 153, 0.85),
-                0 0 95px rgba(16, 185, 129, 0.4),
+                0 0 55px rgba(52, 211, 153, 0.9),
+                0 0 95px rgba(16, 185, 129, 0.45),
                 inset 0 -10px 20px rgba(6, 78, 59, 0.6);
         }}
         @keyframes idleFloat {{
@@ -99,18 +99,18 @@ def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str 
         }}
         @keyframes voiceWave {{
             0% {{ transform: scale(0.95); border-radius: 50%; }}
-            50% {{ transform: scale(1.08); border-radius: 48% 52% 50% 50%; }}
-            100% {{ transform: scale(1.13); border-radius: 50%; }}
+            50% {{ transform: scale(1.09); border-radius: 48% 52% 50% 50%; }}
+            100% {{ transform: scale(1.14); border-radius: 50%; }}
         }}
 
         .giant-letter {{
-            font-size: 64px;
+            font-size: 68px;
             font-weight: 800;
             color: #FFFFFF;
             letter-spacing: 0.08em;
             line-height: 1;
             margin-bottom: 12px;
-            text-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+            text-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
         }}
 
         .voice-status {{
@@ -152,10 +152,10 @@ def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str 
             </div>
 
             <div class="giant-letter">{foco_visual}</div>
-            <div class="voice-status" id="status_{msg_idx}">Toque no microfone abaixo para falar</div>
+            <div class="voice-status" id="status_{msg_idx}">Toque no microfone abaixo para responder</div>
 
             <button class="listen-again-btn" onclick="tocarNovamente_{msg_idx}()">
-                🔊 Ouvir novamente
+                🔊 Ouvir a Professora Yara
             </button>
         </div>
 
@@ -168,13 +168,13 @@ def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str 
             function iniciarAnimacaoFala() {{
                 orb.classList.add('speaking');
                 statusTxt.classList.add('active');
-                statusTxt.innerText = 'Yara está falando...';
+                statusTxt.innerText = 'Professora Yara está falando...';
             }}
 
             function pararAnimacaoFala() {{
                 orb.classList.remove('speaking');
                 statusTxt.classList.remove('active');
-                statusTxt.innerText = 'Sua vez! Aperte o microfone para responder';
+                statusTxt.innerText = 'Sua vez! Aperte o microfone para falar';
             }}
 
             function falarViaNavegador() {{
@@ -182,7 +182,8 @@ def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str 
                 window.speechSynthesis.cancel();
                 const utter = new SpeechSynthesisUtterance(textoFala);
                 utter.lang = 'pt-BR';
-                utter.rate = 0.92;
+                utter.rate = 0.96;
+                utter.pitch = 1.08;
                 utter.onstart = iniciarAnimacaoFala;
                 utter.onend = pararAnimacaoFala;
                 utter.onerror = pararAnimacaoFala;
@@ -195,7 +196,6 @@ def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str 
                     const promessa = aud.play();
                     if (promessa !== undefined) {{
                         promessa.catch(() => {{
-                            // Se o MP3 falhar ou for bloqueado, usa a voz nativa do navegador
                             falarViaNavegador();
                         }});
                     }}
@@ -210,11 +210,10 @@ def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str 
                 aud.onpause = pararAnimacaoFala;
             }}
 
-            // Dispara automaticamente assim que a resposta chega
             window.addEventListener('load', () => {{
                 setTimeout(() => {{
                     tocarNovamente_{msg_idx}();
-                }}, 150);
+                }}, 100);
             }});
         </script>
     </body>
@@ -224,13 +223,12 @@ def _render_orbe_chatgpt_voice(fala_yara: str, foco_visual: str, audio_b64: str 
 
 
 def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
-    # Inicializa a aula do zero
     if "hist_alfabetizacao" not in st.session_state:
         abertura_bruta = (
             "FOCO: A\n"
-            "Olá! Eu sou a Yara e vou te ensinar a ler bem devagar, sem pressa. "
-            "Olha essa letra grandona na tela: é a letra A, de Água e Açaí. "
-            "Aperta o botão do microfone aqui embaixo e repete comigo: A!"
+            "Oi, que alegria ter você na minha escolinha! Eu sou a professora Yara e vamos brincar de descobrir as letras. "
+            "Olha essa letra grandona brilhando na tela: é a letra A, de Arara e Açaí! "
+            "Aperta o microfone aqui embaixo e abre bem a boca para falar comigo: Aaaa!"
         )
         foco, fala = _extrair_foco_e_fala(abertura_bruta)
         audio_bytes = sintetizar_voz(fala)
@@ -247,7 +245,6 @@ def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
 
     visual = st.session_state.alfab_visual
 
-    # Palco principal estilo ChatGPT Voice
     _render_orbe_chatgpt_voice(
         fala_yara=visual["fala"],
         foco_visual=visual["foco"],
@@ -255,40 +252,39 @@ def render_modulo_alfabetizacao(llm: LLMEngine, stt: SpeechEngine):
         msg_idx=visual["turno"]
     )
 
-    # Barra inferior: Microfone grande à esquerda + Reiniciar (✕) à direita
     col_mic, col_close = st.columns([4, 1])
     with col_mic:
         audio_aluno = st.audio_input(
-            "🎙️ Falar com a Yara",
+            "🎙️ Falar com a Professora Yara",
             key=f"mic_alfab_{visual['turno']}",
             label_visibility="collapsed"
         )
     with col_close:
-        if st.button("✕", help="Recomeçar aula do início", use_container_width=True):
+        if st.button("✕", help="Recomeçar brincadeira do início", use_container_width=True):
             for k in ["hist_alfabetizacao", "alfab_visual", "ultimo_audio_alfab"]:
                 st.session_state.pop(k, None)
             st.rerun()
 
-    # Confirmação discreta do que foi captado pelo microfone
     if visual.get("ultima_fala_aluno"):
-        st.caption(f"🎙️ Você disse: *\"{visual['ultima_fala_aluno']}\"*")
+        st.caption(f"🎙️ Você falou: *\"{visual['ultima_fala_aluno']}\"*")
 
-    # Processamento do áudio do aluno
     if audio_aluno is not None:
         audio_bytes = audio_aluno.getvalue()
         if st.session_state.get("ultimo_audio_alfab") != audio_bytes:
             st.session_state.ultimo_audio_alfab = audio_bytes
-            with st.spinner("Ouvindo você..."):
+            with st.spinner("A professora Yara está ouvindo..."):
                 texto_aluno = stt.transcrever_audio(audio_bytes)
 
-            # Se o microfone captou silêncio ou ruído vazio, pede para repetir
             if not texto_aluno or texto_aluno.startswith("[Erro"):
-                texto_aluno = "(Não consegui ouvir direito, pode repetir mais pertinho do microfone?)"
+                texto_aluno = "(Não ouvi direitinho, fala mais pertinho para a professora ouvir!)"
 
+            # Mantém o histórico enxuto (últimas 6 mensagens) para resposta instantânea
             st.session_state.hist_alfabetizacao.append({"role": "user", "content": texto_aluno})
-            with st.spinner("Yara está respondendo..."):
+            historico_curto = st.session_state.hist_alfabetizacao[-6:]
+
+            with st.spinner("..."):
                 resposta_bruta = llm.gerar_resposta(
-                    st.session_state.hist_alfabetizacao,
+                    historico_curto,
                     modo="alfabetizacao"
                 )
                 foco, fala = _extrair_foco_e_fala(resposta_bruta)
