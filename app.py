@@ -221,18 +221,20 @@ st.markdown("""
     }
 
     /* =========================================================================
-       ÁREA PRINCIPAL E MENSAGENS (SEM ÍCONES + PERGUNTA À DIREITA / RESPOSTA À ESQUERDA)
+       ÁREA PRINCIPAL E MENSAGENS (LARGURA UNIFICADA COM A BARRA DE PERGUNTA)
        ========================================================================= */
     .block-container {
-        max-width: 820px !important;
-        padding-top: 1.8rem !important;
+        max-width: 760px !important;
+        padding-top: 2.8rem !important;
         padding-bottom: 6.5rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
         margin: 0 auto !important;
     }
 
     .yara-hero {
         text-align: center;
-        padding: 3.5rem 1rem 1.2rem 1rem;
+        padding: 2.5rem 1rem 1.2rem 1rem;
         animation: fadeIn 0.4s ease-out;
     }
     .yara-hero img {
@@ -295,18 +297,26 @@ st.markdown("""
         width: 100% !important;
     }
 
-    /* Container inferior limpo */
-    div[data-testid="stBottom"],
+    /* Container inferior alinhado na mesma largura exata (760px) da área de chat */
+    div[data-testid="stBottom"] {
+        background-color: #0D0F11 !important;
+        padding-bottom: 1rem !important;
+    }
     div[data-testid="stBottom"] > div {
         background-color: #0D0F11 !important;
+        max-width: 760px !important;
+        margin: 0 auto !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
     }
 
     /* Retângulo externo único da barra de chat */
     div[data-testid="stChatInput"] {
+        width: 100% !important;
         background-color: #16181B !important;
         border: 1px solid #2A2E33 !important;
-        border-radius: 28px !important;
-        padding: 4px 12px !important;
+        border-radius: 26px !important;
+        padding: 8px 14px !important;
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
     }
     div[data-testid="stChatInput"]:focus-within {
@@ -325,11 +335,15 @@ st.markdown("""
 
     @media (max-width: 768px) {
         .block-container {
-            padding-top: 1rem !important;
+            padding-top: 1.5rem !important;
             padding-left: 0.85rem !important;
             padding-right: 0.85rem !important;
         }
-        .yara-hero { padding-top: 2rem; }
+        div[data-testid="stBottom"] > div {
+            padding-left: 0.85rem !important;
+            padding-right: 0.85rem !important;
+        }
+        .yara-hero { padding-top: 1.5rem; }
         .yara-hero h1 { font-size: 1.7rem; }
         div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
             max-width: 88% !important;
