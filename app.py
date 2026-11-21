@@ -29,14 +29,24 @@ def carregar_logo_base64() -> str:
     return ""
 
 
+@st.cache_data(show_spinner=False)
+def gerar_audio_apresentacao_b64() -> str:
+    texto_apresentacao = (
+        "Olá! Eu sou a Yara, sua assistente virtual da Amazônia. "
+        "Aqui no menu ao lado você pode conversar comigo, treinar leitura na escolinha de voz, "
+        "assistir vídeos sobre saúde, meio ambiente e cultura, ou escrever e falar sua dúvida na barra abaixo."
+    )
+    audio_bytes = sintetizar_voz(texto_apresentacao)
+    return base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else ""
+
+
 LOGO_B64 = carregar_logo_base64()
 
-# --- CSS ESTILO GEMINI (PALETA GRAFITE ESCURA + SIDEBAR MINIMALISTA NO TOPO) ---
+# --- CSS ESTILO GEMINI (RETÂNGULO ÚNICO NO INPUT + LAYOUT LIMPO) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    /* Paleta escura fiel ao Gemini */
     .stApp {
         background-color: #0D0F11;
         color: #E3E5E8;
@@ -48,7 +58,6 @@ st.markdown("""
     header[data-testid="stHeader"] {
         background: transparent !important;
     }
-    /* Esconde ícones técnicos da barra superior, rodapé e selo do Streamlit Cloud */
     [data-testid="stToolbarActions"],
     [data-testid="stDecoration"],
     [data-testid="stStatusWidget"],
@@ -62,7 +71,7 @@ st.markdown("""
     }
 
     /* =========================================================================
-       BARRA LATERAL ESTILO GEMINI (CANTO SUPERIOR ESQUERDO + ITENS ALINHADOS)
+       BARRA LATERAL ESTILO GEMINI
        ========================================================================= */
     section[data-testid="stSidebar"] {
         background-color: #131517 !important;
@@ -78,7 +87,6 @@ st.markdown("""
         margin-bottom: 0.15rem !important;
     }
 
-    /* Cabeçalho da marca Yara no canto superior esquerdo */
     .gemini-brand-header {
         display: flex;
         align-items: center;
@@ -110,7 +118,6 @@ st.markdown("""
         font-weight: 500;
     }
 
-    /* Botões de navegação da sidebar compactos e alinhados à esquerda */
     section[data-testid="stSidebar"] .stButton {
         margin-bottom: -0.65rem !important;
     }
@@ -136,15 +143,12 @@ st.markdown("""
         background-color: #1E2023 !important;
         color: #FFFFFF !important;
     }
-
-    /* Item Ativo (Pílula escura arredondada) */
     section[data-testid="stSidebar"] div.nav-active .stButton > button {
         background-color: #25282C !important;
         color: #FFFFFF !important;
         font-weight: 500 !important;
     }
 
-    /* Rótulo discreto de seção */
     .sidebar-section-label {
         font-size: 0.78rem;
         font-weight: 600;
@@ -152,7 +156,6 @@ st.markdown("""
         padding: 1.25rem 0.9rem 0.35rem 0.9rem;
     }
 
-    /* Cartão discreto do perfil no rodapé da sidebar */
     .sidebar-profile-card {
         display: flex;
         align-items: center;
@@ -186,7 +189,7 @@ st.markdown("""
     }
 
     /* =========================================================================
-       ÁREA PRINCIPAL DE CONTEÚDO
+       ÁREA PRINCIPAL E BARRA DE ENTRADA ÚNICA (SEM RETÂNGULO DUPLO)
        ========================================================================= */
     .block-container {
         max-width: 820px !important;
@@ -197,48 +200,29 @@ st.markdown("""
 
     .yara-hero {
         text-align: center;
-        padding: 2rem 1rem 1.1rem 1rem;
+        padding: 3.5rem 1rem 1.2rem 1rem;
         animation: fadeIn 0.4s ease-out;
     }
     .yara-hero img {
-        width: 74px;
-        height: 74px;
-        border-radius: 20px;
-        margin-bottom: 0.9rem;
-        box-shadow: 0 8px 28px rgba(16, 185, 129, 0.2);
+        width: 78px;
+        height: 78px;
+        border-radius: 22px;
+        margin-bottom: 1rem;
+        box-shadow: 0 8px 28px rgba(16, 185, 129, 0.22);
     }
     .yara-hero h1 {
-        font-size: 2.1rem;
+        font-size: 2.2rem;
         font-weight: 600;
         background: linear-gradient(90deg, #FFFFFF 0%, #6EE7B7 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 0.35rem;
+        margin-bottom: 0.4rem;
     }
     .yara-hero p {
         color: #8E9297;
-        font-size: 1rem;
+        font-size: 1.02rem;
         max-width: 490px;
         margin: 0 auto;
-    }
-
-    /* Prompt Chips (Pílulas limpas sem corte de texto) */
-    div.prompt-chip button {
-        background-color: #16181B !important;
-        border: 1px solid #23262A !important;
-        border-radius: 999px !important;
-        padding: 0.75rem 1.15rem !important;
-        color: #E3E5E8 !important;
-        font-size: 0.9rem !important;
-        text-align: left !important;
-        justify-content: flex-start !important;
-        height: 100% !important;
-        transition: all 0.2s ease !important;
-    }
-    div.prompt-chip button:hover {
-        background-color: #1E2125 !important;
-        border-color: #10B981 !important;
-        transform: translateY(-1px);
     }
 
     /* Mensagens do Chat */
@@ -256,16 +240,33 @@ st.markdown("""
         margin-left: 3.5rem;
     }
 
-    /* Barra de Entrada Inferior */
+    /* Container inferior limpo */
+    div[data-testid="stBottom"],
+    div[data-testid="stBottom"] > div {
+        background-color: #0D0F11 !important;
+    }
+
+    /* Retângulo externo único da barra de chat */
     div[data-testid="stChatInput"] {
         background-color: #16181B !important;
         border: 1px solid #2A2E33 !important;
         border-radius: 28px !important;
-        padding: 4px 10px !important;
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4) !important;
+        padding: 4px 12px !important;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
     }
     div[data-testid="stChatInput"]:focus-within {
         border-color: #10B981 !important;
+    }
+
+    /* Remove totalmente o retângulo/borda interna da caixa de texto */
+    div[data-testid="stChatInput"] > div,
+    div[data-testid="stChatInput"] div[data-baseweb="base-input"],
+    div[data-testid="stChatInput"] div[data-baseweb="textarea"],
+    div[data-testid="stChatInput"] textarea {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
     }
 
     @media (max-width: 768px) {
@@ -274,7 +275,8 @@ st.markdown("""
             padding-left: 0.85rem !important;
             padding-right: 0.85rem !important;
         }
-        .yara-hero h1 { font-size: 1.65rem; }
+        .yara-hero { padding-top: 2rem; }
+        .yara-hero h1 { font-size: 1.7rem; }
         div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
             margin-left: 0.75rem;
         }
@@ -296,13 +298,12 @@ def inicializar_motores():
 llm, stt = inicializar_motores()
 
 
-# --- BOTÃO DE BOAS-VINDAS POR VOZ NA TELA INICIAL (ACESSIBILIDADE) ---
+# --- BOTÃO DE BOAS-VINDAS COM VOZ NEURAL NATURAL ---
 def render_botao_boas_vindas_voz():
-    texto_apresentacao = (
-        "Olá! Eu sou a Yara, sua assistente virtual da Amazônia. "
-        "Aqui no menu ao lado você pode conversar comigo, treinar leitura na escolinha de voz, "
-        "assistir vídeos sobre saúde, meio ambiente e cultura, ou escrever e falar sua dúvida na barra abaixo."
-    )
+    audio_b64 = gerar_audio_apresentacao_b64()
+    if not audio_b64:
+        return
+
     html_voz = f"""
     <!DOCTYPE html>
     <html>
@@ -321,13 +322,13 @@ def render_botao_boas_vindas_voz():
             color: #6EE7B7;
             border: 1px solid #23262A;
             border-radius: 999px;
-            padding: 7px 16px;
-            font-size: 13px;
+            padding: 8px 18px;
+            font-size: 13.5px;
             font-weight: 500;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 7px;
+            gap: 8px;
             transition: all 0.2s ease;
         }}
         .welcome-voice-btn:hover {{
@@ -337,35 +338,33 @@ def render_botao_boas_vindas_voz():
     </style>
     </head>
     <body>
-        <button class="welcome-voice-btn" id="btn_welcome" onclick="falarBoasVindas()">
+        <audio id="aud_welcome" src="data:audio/mp3;base64,{audio_b64}" preload="auto"></audio>
+        <button class="welcome-voice-btn" id="btn_welcome" onclick="toggleBoasVindas()">
             🔊 Ouvir apresentação da Yara
         </button>
         <script>
-            function falarBoasVindas() {{
-                if (!('speechSynthesis' in window)) return;
-                const btn = document.getElementById('btn_welcome');
-                if (window.speechSynthesis.speaking) {{
-                    window.speechSynthesis.cancel();
-                    btn.innerText = '🔊 Ouvir apresentação da Yara';
-                    return;
+            const aud = document.getElementById('aud_welcome');
+            const btn = document.getElementById('btn_welcome');
+
+            aud.onplay = () => {{ btn.innerText = '⏸️ Pausar apresentação'; }};
+            aud.onpause = () => {{ btn.innerText = '🔊 Ouvir apresentação da Yara'; }};
+            aud.onended = () => {{ btn.innerText = '🔊 Ouvir apresentação da Yara'; }};
+
+            function toggleBoasVindas() {{
+                if (aud.paused) {{
+                    aud.play();
+                }} else {{
+                    aud.pause();
                 }}
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance({repr(texto_apresentacao)});
-                u.lang = 'pt-BR';
-                u.rate = 0.98;
-                u.onstart = () => {{ btn.innerText = '⏹️ Parar áudio'; }};
-                u.onend = () => {{ btn.innerText = '🔊 Ouvir apresentação da Yara'; }};
-                u.onerror = () => {{ btn.innerText = '🔊 Ouvir apresentação da Yara'; }};
-                window.speechSynthesis.speak(u);
             }}
         </script>
     </body>
     </html>
     """
-    components.html(html_voz, height=42)
+    components.html(html_voz, height=44)
 
 
-# --- BARRA DE ÍCONES COMPACTA ABAIXO DA RESPOSTA ---
+# --- BARRA DE ÍCONES COMPACTA ABAIXO DA RESPOSTA (COM VOZ NEURAL NATURAL) ---
 def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, auto_tocar: bool = False):
     texto_escapado = (
         texto.replace("\\", "\\\\")
@@ -374,7 +373,7 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
         .replace("\n", "\\n")
     )
     audio_tag = (
-        f'<audio id="aud_{msg_id}" src="data:audio/mp3;base64,{audio_b64}" {"autoplay" if auto_tocar else ""}></audio>'
+        f'<audio id="aud_{msg_id}" src="data:audio/mp3;base64,{audio_b64}" preload="auto" {"autoplay" if auto_tocar else ""}></audio>'
         if audio_b64 else ""
     )
 
@@ -450,7 +449,6 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
             const aud = document.getElementById('aud_{msg_id}');
             const btnPlay = document.getElementById('btn_play_{msg_id}');
             const lblPlay = document.getElementById('lbl_play_{msg_id}');
-            const textoLimpo = `{texto_escapado}`.replace(/[*#_]/g, '');
 
             if (aud) {{
                 aud.onplay = () => {{
@@ -468,24 +466,11 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
             }}
 
             function toggleAudio_{msg_id}() {{
-                if (aud) {{
-                    if (aud.paused) {{ aud.play(); }} else {{ aud.pause(); }}
-                    return;
-                }}
-                if ('speechSynthesis' in window) {{
-                    if (window.speechSynthesis.speaking) {{
-                        window.speechSynthesis.cancel();
-                        btnPlay.classList.remove('active');
-                        lblPlay.innerText = 'Ouvir';
-                    }} else {{
-                        window.speechSynthesis.cancel();
-                        const u = new SpeechSynthesisUtterance(textoLimpo);
-                        u.lang = 'pt-BR';
-                        u.rate = 1.0;
-                        u.onstart = () => {{ btnPlay.classList.add('active'); lblPlay.innerText = 'Pausar'; }};
-                        u.onend = () => {{ btnPlay.classList.remove('active'); lblPlay.innerText = 'Ouvir'; }};
-                        window.speechSynthesis.speak(u);
-                    }}
+                if (!aud) return;
+                if (aud.paused) {{
+                    aud.play();
+                }} else {{
+                    aud.pause();
                 }}
             }}
 
@@ -520,7 +505,7 @@ if "mensagens_geral" not in st.session_state:
     st.session_state.mensagens_geral = []
 
 # ==============================================================================
-# BARRA LATERAL ESTILO GEMINI (MARCA NO TOPO ESQUERDO + LISTA ALINHADA)
+# BARRA LATERAL ESTILO GEMINI
 # ==============================================================================
 with st.sidebar:
     logo_topo = (
@@ -537,13 +522,11 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # Ação principal no topo da lista
     if st.button("📝   Nova conversa", key="btn_nova_conversa", use_container_width=True):
         st.session_state.mensagens_geral = []
         st.session_state.pagina_atual = "chat"
         st.rerun()
 
-    # Lista limpa de módulos
     menu_itens = [
         ("💬", "Conversa Geral", "chat"),
         ("🗣️", "Alfabetização por Voz", "alfabetizacao"),
@@ -562,7 +545,6 @@ with st.sidebar:
         if ativo:
             st.markdown('</div>', unsafe_allow_html=True)
 
-    # Seção dedicada para ferramentas do Professor
     st.markdown('<div class="sidebar-section-label">Modo de Uso</div>', unsafe_allow_html=True)
     perfil = st.radio(
         "Perfil de uso:",
@@ -581,9 +563,8 @@ with st.sidebar:
             st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<div style='height: 18px'></div>", unsafe_allow_html=True)
-    tocar_automatico = st.toggle("🔊 Voz neural automática", value=False)
+    tocar_automatico = st.toggle("🔊 Falar resposta automaticamente", value=False)
 
-    # Rodapé estilo cartão de perfil
     nome_perfil = "Professor / Monitor" if perfil == "Professor / Monitor" else "Comunidade"
     badge_plano = "Estúdio Ativo" if perfil == "Professor / Monitor" else "Acesso Livre"
     inicial_avatar = "P" if perfil == "Professor / Monitor" else "Y"
@@ -599,7 +580,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 
-# --- PROCESSAMENTO DA PERGUNTA NO CHAT ---
+# --- PROCESSAMENTO DA PERGUNTA NO CHAT (COM VOZ NEURAL NATURAL EM TODAS AS RESPOSTAS) ---
 def processar_pergunta_chat(pergunta: str):
     st.session_state.mensagens_geral.append({"role": "user", "content": pergunta})
     with st.spinner("Yara está pensando..."):
@@ -609,10 +590,8 @@ def processar_pergunta_chat(pergunta: str):
             modo="geral",
             contexto_extra=contexto_rag,
         )
-        audio_b64 = None
-        if tocar_automatico:
-            audio_bytes = sintetizar_voz(resposta)
-            audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
+        audio_bytes = sintetizar_voz(resposta)
+        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
 
     st.session_state.mensagens_geral.append({
         "role": "assistant",
@@ -642,22 +621,6 @@ if st.session_state.pagina_atual == "chat":
         """, unsafe_allow_html=True)
 
         render_botao_boas_vindas_voz()
-        st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
-
-        sugestoes = [
-            ("💧", "Tratar água do rio", "Como tratar a água do rio para beber com segurança?"),
-            ("📖", "Treinar leitura e palavras", "Quero treinar leitura e aprender novas palavras"),
-            ("🐍", "Lenda da Cobra Grande", "Me conte a lenda amazônica da Cobra Grande"),
-            ("🌱", "Evitar queimadas na roça", "Como evitar queimadas e proteger o solo da roça?"),
-        ]
-        col1, col2 = st.columns(2)
-        for idx, (ico, rotulo_curto, pergunta_completa) in enumerate(sugestoes):
-            coluna = col1 if idx % 2 == 0 else col2
-            with coluna:
-                st.markdown('<div class="prompt-chip">', unsafe_allow_html=True)
-                if st.button(f"{ico}  {rotulo_curto}", key=f"chip_{idx}", use_container_width=True):
-                    processar_pergunta_chat(pergunta_completa)
-                st.markdown('</div>', unsafe_allow_html=True)
 
     else:
         total_msgs = len(st.session_state.mensagens_geral)

@@ -17,8 +17,8 @@ def get_groq_api_key() -> str:
 LLM_MODEL = "llama-3.1-8b-instant"
 STT_MODEL = "whisper-large-v3-turbo"
 
-# Voz neural jovem, doce e expressiva (Educação Infantil)
-TTS_VOICE = "pt-BR-ThalitaNeural"
+# Voz neural brasileira mais natural e expressiva
+TTS_VOICE = "pt-BR-FranciscaNeural"
 
 PROMPT_CHAT_GERAL = """
 Você é a Yara, uma assistente virtual inteligente, acolhedora e educativa criada pelo PET/UFOPA para apoiar comunidades da Amazônia.
