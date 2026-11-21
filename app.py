@@ -10,9 +10,11 @@ from src.modules_ui import render_modulo_alfabetizacao, render_modulo_audiovisua
 from src.professor_ui import render_painel_professor
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
+ICON_PATH = "assets/yara_icone.png" if Path("assets/yara_icone.png").exists() else "🌿"
+
 st.set_page_config(
     page_title="Yara • Assistente IA",
-    page_icon="🌿",
+    page_icon=ICON_PATH,
     layout="wide",
     initial_sidebar_state="expanded"
 )
