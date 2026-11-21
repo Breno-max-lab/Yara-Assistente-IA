@@ -527,8 +527,13 @@ with st.sidebar:
         st.session_state.pagina_atual = "chat"
         st.rerun()
 
+    # Exibe "Voltar ao Chat" apenas se houver conversa em andamento e o usuário estiver em outro módulo
+    if st.session_state.mensagens_geral and st.session_state.pagina_atual != "chat":
+        if st.button("💬   Voltar ao Chat", key="nav_chat", use_container_width=True):
+            st.session_state.pagina_atual = "chat"
+            st.rerun()
+
     menu_itens = [
-        ("💬", "Conversa Geral", "chat"),
         ("🗣️", "Alfabetização por Voz", "alfabetizacao"),
         ("🩺", "Saúde e Bem-Estar", "saude"),
         ("🌱", "Educação Ambiental", "ambiental"),
