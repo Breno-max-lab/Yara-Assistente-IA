@@ -10,11 +10,44 @@ from src.modules_ui import render_modulo_alfabetizacao, render_modulo_audiovisua
 from src.professor_ui import render_painel_professor
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
-ICON_PATH = "assets/yara_icone.png" if Path("assets/yara_icone.png").exists() else "🌿"
+from PIL import Image
+
+def preparar_favicon():
+    caminho = Path("assets/yara_icone.png")
+    if not caminho.exists():
+        return "🌿"
+    try:
+        img = Image.open(caminho).convert("RGBA")
+        # Remove fundo preto quase puro para detectar os limites exatos do símbolo
+        dados = img.getdata()
+        nova_img = Image.new("RGBA", img.size)
+        pixels = []
+        for r, g, b, a in dados:
+            if r < 18 and g < 18 and b < 18:
+                pixels.append((0, 0, 0, 0))
+            else:
+                pixels.append((r, g, b, a))
+        nova_img.putdata(pixels)
+
+        # Recorta exatamente rente ao símbolo
+        bbox = nova_img.getbbox()
+        if bbox:
+            simbolo = nova_img.crop(bbox)
+            lado = max(simbolo.size)
+            margem = int(lado * 0.06)  # Apenas 6% de respiro
+            tamanho_final = lado + margem * 2
+            canvas = Image.new("RGBA", (tamanho_final, tamanho_final), (0, 0, 0, 0))
+            pos_x = (tamanho_final - simbolo.width) // 2
+            pos_y = (tamanho_final - simbolo.height) // 2
+            canvas.paste(simbolo, (pos_x, pos_y), simbolo)
+            return canvas.resize((256, 256), Image.Resampling.LANCZOS)
+        return img
+    except Exception:
+        return str(caminho)
 
 st.set_page_config(
     page_title="Yara • Assistente IA",
-    page_icon=ICON_PATH,
+    page_icon=preparar_favicon(),
     layout="wide",
     initial_sidebar_state="expanded"
 )
