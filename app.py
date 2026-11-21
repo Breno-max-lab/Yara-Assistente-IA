@@ -62,19 +62,24 @@ def carregar_logo_base64() -> str:
 
 
 @st.cache_data(show_spinner=False)
+def gerar_audio_cache_b64(texto: str) -> str:
+    audio_bytes = sintetizar_voz(texto)
+    return base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else ""
+
+
+@st.cache_data(show_spinner=False)
 def gerar_audio_apresentacao_b64() -> str:
     texto_apresentacao = (
         "Olá! Eu sou a Yara, sua assistente virtual da Amazônia. "
         "Aqui no menu ao lado você pode conversar comigo, treinar leitura na escolinha de voz, "
         "assistir vídeos sobre saúde, meio ambiente e cultura, ou escrever e falar sua dúvida na barra abaixo."
     )
-    audio_bytes = sintetizar_voz(texto_apresentacao)
-    return base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else ""
+    return gerar_audio_cache_b64(texto_apresentacao)
 
 
 LOGO_B64 = carregar_logo_base64()
 
-# --- CSS ESTILO GEMINI (SEM ESMAECIMENTO DE TELA DURANTE RERUN) ---
+# --- CSS ESTILO GEMINI ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -87,7 +92,7 @@ st.markdown("""
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Impede que o Streamlit escureça/apague a tela durante o processamento */
+    /* Impede que o Streamlit escureça a tela durante o processamento */
     [data-stale="true"],
     .element-container,
     div[data-testid="stVerticalBlock"],
@@ -281,19 +286,26 @@ st.markdown("""
         gap: 0 !important;
     }
 
-    /* Pergunta do Usuário: balão à direita */
+    /* Pergunta do Usuário: balão à direita com texto centralizado verticalmente */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         background-color: #1E2125 !important;
         border: 1px solid #2A2E33 !important;
         border-radius: 22px 22px 6px 22px !important;
-        padding: 0.75rem 1.15rem !important;
+        padding: 0.65rem 1.15rem !important;
         margin-left: auto !important;
         margin-right: 0 !important;
         width: fit-content !important;
         max-width: 78% !important;
     }
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) div[data-testid="stChatMessageContent"],
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) .stMarkdown,
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) p {
-        margin-bottom: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.4 !important;
         color: #F8FAFC !important;
     }
 
@@ -449,8 +461,12 @@ def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, 
         .replace("$", "\\$")
         .replace("\n", "\\n")
     )
+    # Se o áudio ainda não foi gerado em background, gera sob demanda com cache rápido
+    if not audio_b64:
+        audio_b64 = gerar_audio_cache_b64(texto)
+
     audio_tag = (
-        f'<audio id="aud_{msg_id}" src="data:audio/mp3;base64,{audio_b64}" preload="auto" {"autoplay" if auto_tocar else ""}></audio>'
+        f'<audio id="aud_{msg_id}" src="data:audio/mp3;base64,{audio_b64}" preload="none" {"autoplay" if auto_tocar else ""}></audio>'
         if audio_b64 else ""
     )
 
@@ -666,7 +682,6 @@ with st.sidebar:
 
 # --- ROTEAMENTO DAS TELAS ---
 if st.session_state.pagina_atual == "chat":
-    # 1. Renderiza tela inicial OU histórico imediato (incluindo a pergunta recém-enviada)
     if not st.session_state.mensagens_geral:
         img_html = (
             f'<img src="data:image/png;base64,{LOGO_B64}" alt="Yara">'
@@ -698,7 +713,6 @@ if st.session_state.pagina_atual == "chat":
                         auto_tocar=deve_tocar
                     )
 
-    # 2. Se acabou de enviar uma pergunta, gera a resposta logo abaixo do balão do usuário
     if st.session_state.aguardando_resposta and st.session_state.mensagens_geral:
         ultima_pergunta = st.session_state.mensagens_geral[-1]["content"]
         with st.chat_message("assistant"):
@@ -709,8 +723,8 @@ if st.session_state.pagina_atual == "chat":
                     modo="geral",
                     contexto_extra=contexto_rag,
                 )
-                audio_bytes = sintetizar_voz(resposta)
-                audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
+                # Só gera o áudio antes de exibir se a fala automática estiver ativada
+                audio_b64 = gerar_audio_cache_b64(resposta) if tocar_automatico else None
 
         st.session_state.mensagens_geral.append({
             "role": "assistant",
@@ -722,7 +736,6 @@ if st.session_state.pagina_atual == "chat":
         st.session_state.aguardando_resposta = False
         st.rerun()
 
-    # 3. Barra de entrada (salva a pergunta e atualiza na hora antes de chamar a IA)
     entrada = st.chat_input(
         "Peça à Yara...",
         accept_audio=True,
