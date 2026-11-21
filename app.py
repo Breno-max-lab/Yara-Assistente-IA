@@ -74,7 +74,7 @@ def gerar_audio_apresentacao_b64() -> str:
 
 LOGO_B64 = carregar_logo_base64()
 
-# --- CSS ESTILO GEMINI ---
+# --- CSS ESTILO GEMINI (SEM ESMAECIMENTO DE TELA DURANTE RERUN) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -85,6 +85,15 @@ st.markdown("""
     }
     html, body, p, h1, h2, h3, h4, label, input, textarea, button {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Impede que o Streamlit escureça/apague a tela durante o processamento */
+    [data-stale="true"],
+    .element-container,
+    div[data-testid="stVerticalBlock"],
+    div[data-testid="stChatMessage"] {
+        opacity: 1 !important;
+        transition: none !important;
     }
 
     header[data-testid="stHeader"] {
@@ -221,7 +230,7 @@ st.markdown("""
     }
 
     /* =========================================================================
-       ÁREA PRINCIPAL E MENSAGENS (LARGURA UNIFICADA COM A BARRA DE PERGUNTA)
+       ÁREA PRINCIPAL E MENSAGENS
        ========================================================================= */
     .block-container {
         max-width: 760px !important;
@@ -297,7 +306,7 @@ st.markdown("""
         width: 100% !important;
     }
 
-    /* Container inferior alinhado na mesma largura exata (760px) da área de chat */
+    /* Container inferior alinhado na mesma largura (760px) */
     div[data-testid="stBottom"] {
         background-color: #0D0F11 !important;
         padding-bottom: 1rem !important;
@@ -571,6 +580,8 @@ if "pagina_atual" not in st.session_state:
     st.session_state.pagina_atual = "chat"
 if "mensagens_geral" not in st.session_state:
     st.session_state.mensagens_geral = []
+if "aguardando_resposta" not in st.session_state:
+    st.session_state.aguardando_resposta = False
 
 # ==============================================================================
 # BARRA LATERAL ESTILO GEMINI
@@ -592,6 +603,7 @@ with st.sidebar:
 
     if st.button("📝   Nova conversa", key="btn_nova_conversa", use_container_width=True):
         st.session_state.mensagens_geral = []
+        st.session_state.aguardando_resposta = False
         st.session_state.pagina_atual = "chat"
         st.rerun()
 
@@ -652,31 +664,9 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 
-# --- PROCESSAMENTO DA PERGUNTA NO CHAT ---
-def processar_pergunta_chat(pergunta: str):
-    st.session_state.mensagens_geral.append({"role": "user", "content": pergunta})
-    with st.spinner("Yara está pensando..."):
-        contexto_rag = buscar_contexto_documentos(pergunta)
-        resposta = llm.gerar_resposta(
-            st.session_state.mensagens_geral,
-            modo="geral",
-            contexto_extra=contexto_rag,
-        )
-        audio_bytes = sintetizar_voz(resposta)
-        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
-
-    st.session_state.mensagens_geral.append({
-        "role": "assistant",
-        "content": resposta,
-        "audio_b64": audio_b64,
-        "auto_tocar": tocar_automatico,
-        "usou_rag": bool(contexto_rag),
-    })
-    st.rerun()
-
-
 # --- ROTEAMENTO DAS TELAS ---
 if st.session_state.pagina_atual == "chat":
+    # 1. Renderiza tela inicial OU histórico imediato (incluindo a pergunta recém-enviada)
     if not st.session_state.mensagens_geral:
         img_html = (
             f'<img src="data:image/png;base64,{LOGO_B64}" alt="Yara">'
@@ -708,6 +698,31 @@ if st.session_state.pagina_atual == "chat":
                         auto_tocar=deve_tocar
                     )
 
+    # 2. Se acabou de enviar uma pergunta, gera a resposta logo abaixo do balão do usuário
+    if st.session_state.aguardando_resposta and st.session_state.mensagens_geral:
+        ultima_pergunta = st.session_state.mensagens_geral[-1]["content"]
+        with st.chat_message("assistant"):
+            with st.spinner("Yara está pensando..."):
+                contexto_rag = buscar_contexto_documentos(ultima_pergunta)
+                resposta = llm.gerar_resposta(
+                    st.session_state.mensagens_geral,
+                    modo="geral",
+                    contexto_extra=contexto_rag,
+                )
+                audio_bytes = sintetizar_voz(resposta)
+                audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
+
+        st.session_state.mensagens_geral.append({
+            "role": "assistant",
+            "content": resposta,
+            "audio_b64": audio_b64,
+            "auto_tocar": tocar_automatico,
+            "usou_rag": bool(contexto_rag),
+        })
+        st.session_state.aguardando_resposta = False
+        st.rerun()
+
+    # 3. Barra de entrada (salva a pergunta e atualiza na hora antes de chamar a IA)
     entrada = st.chat_input(
         "Peça à Yara...",
         accept_audio=True,
@@ -715,14 +730,18 @@ if st.session_state.pagina_atual == "chat":
     )
 
     if entrada:
+        pergunta_usuario = None
         if getattr(entrada, "audio", None) is not None:
             audio_bytes = entrada.audio.getvalue()
             with st.spinner("Ouvindo sua pergunta..."):
-                transcricao = stt.transcrever_audio(audio_bytes)
-            if transcricao:
-                processar_pergunta_chat(transcricao)
+                pergunta_usuario = stt.transcrever_audio(audio_bytes)
         elif getattr(entrada, "text", None):
-            processar_pergunta_chat(entrada.text)
+            pergunta_usuario = entrada.text.strip()
+
+        if pergunta_usuario:
+            st.session_state.mensagens_geral.append({"role": "user", "content": pergunta_usuario})
+            st.session_state.aguardando_resposta = True
+            st.rerun()
 
 elif st.session_state.pagina_atual == "alfabetizacao":
     render_modulo_alfabetizacao(llm, stt)
