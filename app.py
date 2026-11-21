@@ -1,5 +1,6 @@
 import base64
 from pathlib import Path
+from PIL import Image
 import streamlit as st
 import streamlit.components.v1 as components
 from src.llm_engine import LLMEngine
@@ -9,8 +10,6 @@ from src.rag_engine import buscar_contexto_documentos
 from src.modules_ui import render_modulo_alfabetizacao, render_modulo_audiovisual
 from src.professor_ui import render_painel_professor
 
-# --- CONFIGURAÇÃO DA PÁGINA ---
-from PIL import Image
 
 def preparar_favicon():
     caminho = Path("assets/yara_icone.png")
@@ -18,23 +17,19 @@ def preparar_favicon():
         return "🌿"
     try:
         img = Image.open(caminho).convert("RGBA")
-        # Remove fundo preto quase puro para detectar os limites exatos do símbolo
         dados = img.getdata()
         nova_img = Image.new("RGBA", img.size)
-        pixels = []
-        for r, g, b, a in dados:
-            if r < 18 and g < 18 and b < 18:
-                pixels.append((0, 0, 0, 0))
-            else:
-                pixels.append((r, g, b, a))
+        pixels = [
+            (0, 0, 0, 0) if (r < 18 and g < 18 and b < 18) else (r, g, b, a)
+            for r, g, b, a in dados
+        ]
         nova_img.putdata(pixels)
 
-        # Recorta exatamente rente ao símbolo
         bbox = nova_img.getbbox()
         if bbox:
             simbolo = nova_img.crop(bbox)
             lado = max(simbolo.size)
-            margem = int(lado * 0.06)  # Apenas 6% de respiro
+            margem = int(lado * 0.06)
             tamanho_final = lado + margem * 2
             canvas = Image.new("RGBA", (tamanho_final, tamanho_final), (0, 0, 0, 0))
             pos_x = (tamanho_final - simbolo.width) // 2
@@ -45,6 +40,8 @@ def preparar_favicon():
     except Exception:
         return str(caminho)
 
+
+# --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
     page_title="Yara • Assistente IA",
     page_icon=preparar_favicon(),
@@ -77,7 +74,7 @@ def gerar_audio_apresentacao_b64() -> str:
 
 LOGO_B64 = carregar_logo_base64()
 
-# --- CSS ESTILO GEMINI (RETÂNGULO ÚNICO NO INPUT + LAYOUT LIMPO) ---
+# --- CSS ESTILO GEMINI ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -224,7 +221,7 @@ st.markdown("""
     }
 
     /* =========================================================================
-       ÁREA PRINCIPAL E BARRA DE ENTRADA ÚNICA (SEM RETÂNGULO DUPLO)
+       ÁREA PRINCIPAL E MENSAGENS (SEM ÍCONES + PERGUNTA À DIREITA / RESPOSTA À ESQUERDA)
        ========================================================================= */
     .block-container {
         max-width: 820px !important;
@@ -260,19 +257,42 @@ st.markdown("""
         margin: 0 auto;
     }
 
-    /* Mensagens do Chat */
+    /* Oculta ícones de avatar nas mensagens */
+    div[data-testid="stChatMessageAvatarUser"],
+    div[data-testid="stChatMessageAvatarAssistant"] {
+        display: none !important;
+    }
+
     div[data-testid="stChatMessage"] {
         background-color: transparent !important;
         border: none !important;
-        padding: 0.65rem 0 !important;
-        gap: 0.9rem;
+        padding: 0.45rem 0 !important;
+        gap: 0 !important;
     }
+
+    /* Pergunta do Usuário: balão à direita */
     div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
-        background-color: #1A1D21 !important;
-        border: 1px solid #262A30 !important;
-        border-radius: 20px !important;
-        padding: 0.85rem 1.2rem !important;
-        margin-left: 3.5rem;
+        background-color: #1E2125 !important;
+        border: 1px solid #2A2E33 !important;
+        border-radius: 22px 22px 6px 22px !important;
+        padding: 0.75rem 1.15rem !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        width: fit-content !important;
+        max-width: 78% !important;
+    }
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) p {
+        margin-bottom: 0 !important;
+        color: #F8FAFC !important;
+    }
+
+    /* Resposta da Yara: texto limpo à esquerda */
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {
+        background-color: transparent !important;
+        padding: 0.6rem 0.2rem !important;
+        margin-right: auto !important;
+        margin-left: 0 !important;
+        width: 100% !important;
     }
 
     /* Container inferior limpo */
@@ -293,7 +313,6 @@ st.markdown("""
         border-color: #10B981 !important;
     }
 
-    /* Remove totalmente o retângulo/borda interna da caixa de texto */
     div[data-testid="stChatInput"] > div,
     div[data-testid="stChatInput"] div[data-baseweb="base-input"],
     div[data-testid="stChatInput"] div[data-baseweb="textarea"],
@@ -313,7 +332,7 @@ st.markdown("""
         .yara-hero { padding-top: 2rem; }
         .yara-hero h1 { font-size: 1.7rem; }
         div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
-            margin-left: 0.75rem;
+            max-width: 88% !important;
         }
     }
 
@@ -399,7 +418,7 @@ def render_botao_boas_vindas_voz():
     components.html(html_voz, height=44)
 
 
-# --- BARRA DE ÍCONES COMPACTA ABAIXO DA RESPOSTA (COM VOZ NEURAL NATURAL) ---
+# --- BARRA DE ÍCONES COMPACTA ABAIXO DA RESPOSTA ---
 def render_barra_acoes_resposta(texto: str, audio_b64: str | None, msg_id: int, auto_tocar: bool = False):
     texto_escapado = (
         texto.replace("\\", "\\\\")
@@ -562,7 +581,6 @@ with st.sidebar:
         st.session_state.pagina_atual = "chat"
         st.rerun()
 
-    # Exibe "Voltar ao Chat" apenas se houver conversa em andamento e o usuário estiver em outro módulo
     if st.session_state.mensagens_geral and st.session_state.pagina_atual != "chat":
         if st.button("💬   Voltar ao Chat", key="nav_chat", use_container_width=True):
             st.session_state.pagina_atual = "chat"
@@ -620,7 +638,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 
-# --- PROCESSAMENTO DA PERGUNTA NO CHAT (COM VOZ NEURAL NATURAL EM TODAS AS RESPOSTAS) ---
+# --- PROCESSAMENTO DA PERGUNTA NO CHAT ---
 def processar_pergunta_chat(pergunta: str):
     st.session_state.mensagens_geral.append({"role": "user", "content": pergunta})
     with st.spinner("Yara está pensando..."):
@@ -645,8 +663,6 @@ def processar_pergunta_chat(pergunta: str):
 
 # --- ROTEAMENTO DAS TELAS ---
 if st.session_state.pagina_atual == "chat":
-    avatar_yara = "assets/yara_icone.png" if Path("assets/yara_icone.png").exists() else "🌿"
-
     if not st.session_state.mensagens_geral:
         img_html = (
             f'<img src="data:image/png;base64,{LOGO_B64}" alt="Yara">'
@@ -665,8 +681,7 @@ if st.session_state.pagina_atual == "chat":
     else:
         total_msgs = len(st.session_state.mensagens_geral)
         for idx, msg in enumerate(st.session_state.mensagens_geral):
-            avatar = avatar_yara if msg["role"] == "assistant" else "🧑"
-            with st.chat_message(msg["role"], avatar=avatar):
+            with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
                 if msg["role"] == "assistant":
                     if msg.get("usou_rag"):
